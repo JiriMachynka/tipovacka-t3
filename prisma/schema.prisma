@@ -11,146 +11,92 @@ datasource db {
     relationMode = "prisma"
 }
 
-// Necessary for Next auth
-model Account {
-    id                Int     @id @default(autoincrement())
-    type              String
-    provider          String
-    providerAccountId String
-    refresh_token     String?
-    access_token      String?
-    expires_at        Int?
-    token_type        String?
-    scope             String?
-    id_token          String?
-    session_state     String?
-    userId            Int
-    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-    @@unique([provider, providerAccountId])
-}
-
-model Session {
-    id           Int      @id @default(autoincrement())
-    sessionToken String   @unique
-    userId       Int
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-    id       Int       @id @default(autoincrement())
-    name     String
-    username String
-    email    String    @unique
-    accounts Account[]
-    sessions Session[]
-    player   Player[]
-}
-
-model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
-
-    @@unique([identifier, token])
-}
-
 model Tournament {
     id                    Int                     @id @default(autoincrement())
+    authorId              String
     name                  String
     teams                 Team[]
     players               Player[]
     scorers               Scorer[]
     tournamentOverallTips TournamentOverallTips[]
     tournamentMatchTips   TournamentMatchTip[]
-    userMatchTip          UserMatchTip[]
 }
 
 model Player {
-    id                     Int                   @id @default(autoincrement())
-    userId                 Int
-    user                   User                  @relation(fields: [userId], references: [id])
+    id                     Int                    @id @default(autoincrement())
+    username               String
     tournamentId           Int
-    tournament             Tournament            @relation(fields: [tournamentId], references: [id])
-    tournamentOverallTipId Int
-    tournamentOverallTips  TournamentOverallTips @relation(fields: [tournamentOverallTipId], references: [id])
-    scorerFirstId          Int
-    scorerFirst            Scorer                @relation(name: "scorerFirst", fields: [scorerFirstId], references: [id])
-    scorerSecondId         Int
-    scorerSecond           Scorer                @relation(name: "scorerSecond", fields: [scorerSecondId], references: [id])
+    tournament             Tournament             @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+    tournamentOverallTipId Int?
+    tournamentOverallTips  TournamentOverallTips? @relation(fields: [tournamentOverallTipId], references: [id], onDelete: Cascade)
+    scorerFirstId          Int?
+    scorerFirst            Scorer?                @relation(name: "scorerFirst", fields: [scorerFirstId], references: [id], onDelete: Cascade)
+    scorerSecondId         Int?
+    scorerSecond           Scorer?                @relation(name: "scorerSecond", fields: [scorerSecondId], references: [id], onDelete: Cascade)
     matchTips              UserMatchTip[]
-    tournamentMatchTip     TournamentMatchTip[]
 }
 
 model Team {
-    id                   Int                     @id @default(autoincrement())
-    name                 String
-    tournamentId         Int
-    tournament           Tournament              @relation(fields: [tournamentId], references: [id])
-    homeTeam             TournamentMatchTip[]    @relation("homeTeam")
-    awayTeam             TournamentMatchTip[]    @relation("awayTeam")
-    winner               TournamentOverallTips[] @relation("winner")
-    semifinalistFirst    TournamentOverallTips[] @relation("semifinalistFirst")
-    semifinalistSecond   TournamentOverallTips[] @relation("semifinalistSecond")
-    userMatchTipHomeTeam UserMatchTip[]          @relation("homeTeam")
-    userMatchTipAwayTeam UserMatchTip[]          @relation("awayTeam")
+    id                 Int                     @id @default(autoincrement())
+    groupName          String
+    name               String
+    tournamentId       Int
+    tournament         Tournament              @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+    homeTeam           TournamentMatchTip[]    @relation("homeTeam")
+    awayTeam           TournamentMatchTip[]    @relation("awayTeam")
+    winner             TournamentOverallTips[] @relation("winner")
+    semifinalistFirst  TournamentOverallTips[] @relation("semifinalistFirst")
+    semifinalistSecond TournamentOverallTips[] @relation("semifinalistSecond")
 }
 
 model TournamentOverallTips {
     id                   Int        @id @default(autoincrement())
-    winnerId             Int
-    winner               Team       @relation(name: "winner", fields: [winnerId], references: [id])
-    semifinalistFirstId  Int
-    semifinalistFirst    Team       @relation(name: "semifinalistFirst", fields: [semifinalistFirstId], references: [id])
-    semifinalistSecondId Int
-    semifinalistSecond   Team       @relation(name: "semifinalistSecond", fields: [semifinalistSecondId], references: [id])
     tournamentId         Int
     tournament           Tournament @relation(fields: [tournamentId], references: [id])
+    winnerId             Int?
+    winner               Team?      @relation(name: "winner", fields: [winnerId], references: [id])
+    semifinalistFirstId  Int?
+    semifinalistFirst    Team?      @relation(name: "semifinalistFirst", fields: [semifinalistFirstId], references: [id])
+    semifinalistSecondId Int?
+    semifinalistSecond   Team?      @relation(name: "semifinalistSecond", fields: [semifinalistSecondId], references: [id])
     player               Player[]
 }
 
 model UserMatchTip {
-    id           Int        @id @default(autoincrement())
-    playerId     Int
-    player       Player     @relation(fields: [playerId], references: [id])
-    homeTeamId   Int
-    homeTeam     Team       @relation(name: "homeTeam", fields: [homeTeamId], references: [id])
-    awayTeamId   Int
-    awayTeam     Team       @relation(name: "awayTeam", fields: [awayTeamId], references: [id])
-    homeScore    Int
-    awayScore    Int
-    tournamentId Int
-    tournament   Tournament @relation(fields: [tournamentId], references: [id])
-    points       Int
-    played       Boolean
-    locked       Boolean
+    id                   Int                @id @default(autoincrement())
+    playerId             Int
+    player               Player             @relation(fields: [playerId], references: [id])
+    tournamentMatchTipId Int
+    tournamentMatchTip   TournamentMatchTip @relation(fields: [tournamentMatchTipId], references: [id])
+    homeScore            Int                @default(0)
+    awayScore            Int                @default(0)
+    points               Int?
 }
 
 model TournamentMatchTip {
-    id           Int        @id @default(autoincrement())
-    playerId     Int
-    player       Player     @relation(fields: [playerId], references: [id])
-    homeTeamId   Int
-    homeTeam     Team       @relation(name: "homeTeam", fields: [homeTeamId], references: [id])
-    awayTeamId   Int
-    awayTeam     Team       @relation(name: "awayTeam", fields: [awayTeamId], references: [id])
-    homeScore    Int
-    awayScore    Int
+    id           Int            @id @default(autoincrement())
+    date         DateTime
     tournamentId Int
-    tournament   Tournament @relation(fields: [tournamentId], references: [id])
-    points       Int
-    played       Boolean
-    locked       Boolean
+    tournament   Tournament     @relation(fields: [tournamentId], references: [id])
+    homeTeamId   Int
+    homeTeam     Team           @relation(name: "homeTeam", fields: [homeTeamId], references: [id])
+    awayTeamId   Int
+    awayTeam     Team           @relation(name: "awayTeam", fields: [awayTeamId], references: [id])
+    homeScore    Int            @default(0)
+    awayScore    Int            @default(0)
+    played       Boolean        @default(false)
+    locked       Boolean        @default(false)
+    userMatchTip UserMatchTip[]
 }
 
 model Scorer {
     id           Int        @id @default(autoincrement())
-    name         String
-    goals        Int
-    assists      Int
     tournamentId Int
     tournament   Tournament @relation(fields: [tournamentId], references: [id])
-    scorerFirst  Player[]   @relation("scorerFirst")
-    scorerSecond Player[]   @relation("scorerSecond")
+    firstName    String
+    lastName     String
+    goals        Int        @default(0)
+    assists      Int        @default(0)
+    scorerFirst  Player[]   @relation(name: "scorerFirst")
+    scorerSecond Player[]   @relation(name: "scorerSecond")
 }

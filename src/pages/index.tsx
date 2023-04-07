@@ -1,21 +1,19 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
-import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 
 import { api } from "~/utils/api";
+import Navigation from "@/components/Navigation";
 
 const Home: NextPage = () => {
-  const user = useUser();
   return (
     <>
       <Head>
         <title>Tipovačka</title>
         <meta name="description" content="Tipovačka" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/tipovacka-logo.ico" />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
-        {!user.isSignedIn ? <SignInButton /> : <SignOutButton />}
+      <main className="flex min-h-screen bg-[#11132b]">
+        <Navigation />
       </main>
     </>
   );

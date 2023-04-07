@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .date-picker {
+    @apply bg-transparent border border-slate-50 rounded-md px-3 py-2;
+  }
+  .date-picker::-webkit-calendar-picker-indicator {
+    @apply bg-white p-1 rounded-md hover:cursor-pointer;
+  }
+
+  table, tr, td, th {
+    @apply border-2 border-slate-50;
+  }
+}
