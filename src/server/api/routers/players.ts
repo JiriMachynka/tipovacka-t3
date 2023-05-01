@@ -1,28 +1,7 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const playersRouter = createTRPCRouter({
-  getPlayer: publicProcedure
-    .input(z.object({
-      tournamentId: z.number(),
-      username: z.string(),
-    }))
-    .query(async ({ ctx, input }) => {
-      const { tournamentId, username } = input;
-      const player = await ctx.prisma.tournament.findFirst({
-        where: {
-          id: tournamentId,
-        },
-        include: {
-          players: {
-            where: {
-              username,
-            },
-          },
-        },
-      });
-      return player;
-    }),
   createScorer: protectedProcedure
     .input(z.object({
       tournamentId: z.number(),

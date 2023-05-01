@@ -6,9 +6,9 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocale from "dayjs/plugin/updateLocale";
 import "dayjs/locale/cs";
 import { Download, Swords, Users } from "lucide-react";
-import {  useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 dayjs.locale("cs");
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocale);
@@ -25,7 +25,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
     tournamentData?.tournamentMatchTips?.map(match => {
       firstRow.push(`${match.homeTeam.name} - ${match.awayTeam.name}`);
     });
-    const tableContent: any = [];
+    const tableContent: string[][] = [];
     tournamentData?.players?.map(player => {
       const row = [];
       row.push(player.username);
@@ -33,7 +33,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
         const matchTip = match.userMatchTip.find(tip => tip.playerId === player.id);
         row.push(`${matchTip?.homeScore || 0}:${matchTip?.awayScore || 0}`);
       });
-      tableContent.push(row);
+      tableContent.push(row as string[]);
     });
     csv.push(firstRow, ...tableContent);
     const csvContent = "data:text/csv;charset=utf-8," + csv.map(e => e.join(";")).join("\n");
@@ -84,7 +84,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
           <div className="flex justify-center gap-3">
             {[...new Array<number[]>(Math.ceil(tournamentData.tournamentMatchTips.length / 4))].map((_, idx) => {
               return (
-                <Button key={idx} className={clsx("text-xl border-2 border-slate-50", {
+                <Button key={idx} className={cn("text-xl border-2 border-slate-50", {
                   "bg-slate-50 text-slate-800": pagination === idx
                 })} onClick={() => setPagination(idx)}>{idx + 1}</Button>
               )

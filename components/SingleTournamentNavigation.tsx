@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils";
 import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs"
-import { type GetServerSidePropsContext } from "next";
 import Link from "next/link"
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";

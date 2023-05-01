@@ -9,22 +9,12 @@ import { api } from "~/utils/api";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import clsx from "clsx";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { cn } from "@/lib/utils";
+import { type TEditedMatch } from "@/types";
 dayjs.extend(relativeTime);
 
-export type TEditedMatch = {
-  matchId: number;
-  date: string;
-  group: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeTeamId: number;
-  awayTeamId: number;
-  homeScore: number;
-  awayScore: number;
-} | null;
 
 export const ManageMatches = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -288,7 +278,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
                       <td className="text-xl font-semibold text-center">{match.homeTeam.name}</td>
                       <td className="text-xl font-semibold text-center">{match.homeScore}:{match.awayScore}</td>
                       <td className="text-xl font-semibold text-center">{match.awayTeam.name}</td>
-                      <td className={clsx("text-xl font-semibold", {
+                      <td className={cn("text-xl font-semibold", {
                         "hidden": match.locked
                       })}>
                         <AlertDialog>
@@ -311,7 +301,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
                           </AlertDialogContent>
                         </AlertDialog>
                       </td>
-                      <td className={clsx("text-xl font-semibold", {
+                      <td className={cn("text-xl font-semibold", {
                         "hidden": match.locked
                       })}>
                         <Edit onClick={() => {

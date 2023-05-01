@@ -4,16 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import clsx from "clsx";
 import { Formik } from "formik";
 import { Fragment, useState } from "react";
 import { api } from "~/utils/api";
 import { type GetServerSidePropsContext } from "next";
 import { Edit } from "lucide-react";
-import { type TEditedMatch } from "./manage-matches";
+import { type TEditedMatch } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import dayjs from "dayjs";
+import { cn } from "@/lib/utils";
+import { type Team } from "@prisma/client";
 
 export const MyTips = ({ id }: { id: string }) => {
   const { toast } = useToast();
@@ -76,8 +77,8 @@ export const MyTips = ({ id }: { id: string }) => {
   });
 
   if (!sortedTeams || !groups || !tournamentData || !overallTipsData || !userMatchTips) return null
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  const tournamentGroups = [...new Set(tournamentData?.teams.map(team => team.groupName))];
+
+  const tournamentGroups = [...new Set(tournamentData?.teams.map((team: Team) => team.groupName))];
 
   return (
     <SingleTournamentLayout>
@@ -195,13 +196,16 @@ export const MyTips = ({ id }: { id: string }) => {
             <AccordionContent>
               <Formik
                 initialValues={{
-                  winner: overallTipsData.winner?.name || "",
-                  semifinalistFirst: overallTipsData.semifinalistFirst?.name || "",
-                  semifinalistSecond: overallTipsData.semifinalistSecond?.name || ""
+                  winner: overallTipsData?.winner?.name || "",
+                  semifinalistFirst: overallTipsData?.semifinalistFirst?.name || "",
+                  semifinalistSecond: overallTipsData?.semifinalistSecond?.name || ""
                 }}
                 onSubmit={(values) => {
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   const winnerId = sortedTeams.filter(team => team.name === values.winner)[0]!.id;
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   const semifinalistFirstId = sortedTeams.filter(team => team.name === values.semifinalistFirst)[0]!.id;
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   const semifinalistSecondId = sortedTeams.filter(team => team.name === values.semifinalistSecond)[0]!.id;
                   updateMyTips({
                     tournamentId: parseInt(id),
@@ -224,7 +228,7 @@ export const MyTips = ({ id }: { id: string }) => {
                           {groups.map((group, groupIdx) => (
                             sortedTeams.filter(team => team.groupName === group.groupName).map((team, idx) => (
                               <Fragment key={`${group.groupName}${idx}`}>
-                                {idx === 0 && <SelectGroup key={group.groupName} className={clsx("px-5 font-bold text-lg", {
+                                {idx === 0 && <SelectGroup key={group.groupName} className={cn("px-5 font-bold text-lg", {
                                   "mt-2": groupIdx !== 0
                                 })}>{group.groupName}</SelectGroup>}
                                 <SelectItem key={team.id} value={team.name} className="text-md">{team.name}</SelectItem>
@@ -244,7 +248,7 @@ export const MyTips = ({ id }: { id: string }) => {
                           {groups.map((group, groupIdx) => (
                             sortedTeams.filter(team => team.groupName === group.groupName).map((team, idx) => (
                               <Fragment key={`${group.groupName}${idx}`}>
-                                {idx === 0 && <SelectGroup key={group.groupName} className={clsx("px-5 font-bold text-lg", {
+                                {idx === 0 && <SelectGroup key={group.groupName} className={cn("px-5 font-bold text-lg", {
                                   "mt-2": groupIdx !== 0
                                 })}>{group.groupName}</SelectGroup>}
                                 <SelectItem key={team.id} value={team.name} className="text-md">{team.name}</SelectItem>
@@ -264,7 +268,7 @@ export const MyTips = ({ id }: { id: string }) => {
                           {groups.map((group, groupIdx) => (
                             sortedTeams.filter(team => team.groupName === group.groupName).map((team, idx) => (
                               <Fragment key={`${group.groupName}${idx}`}>
-                                {idx === 0 && <SelectGroup key={group.groupName} className={clsx("px-5 font-bold text-lg", {
+                                {idx === 0 && <SelectGroup key={group.groupName} className={cn("px-5 font-bold text-lg", {
                                   "mt-2": groupIdx !== 0
                                 })}>{group.groupName}</SelectGroup>}
                                 <SelectItem key={team.id} value={team.name} className="text-md">{team.name}</SelectItem>
