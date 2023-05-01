@@ -1,6 +1,4 @@
 import { type NextPage } from "next";
-import Head from "next/head";
-
 import { ChevronRight } from "lucide-react";
 import { api } from "~/utils/api";
 import { Button } from "@/components/ui/button";
