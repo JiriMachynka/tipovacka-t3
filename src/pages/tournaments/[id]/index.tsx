@@ -9,13 +9,11 @@ import { Download, Swords, Users } from "lucide-react";
 import {  useState } from "react";
 import { Button } from "@/components/ui/button";
 import clsx from "clsx";
-import { useAuth } from "@clerk/nextjs";
 dayjs.locale("cs");
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocale);
 
 export const SingleTournamentPage = ({ id }: { id: string }) => {
-  const user = useAuth();
   const { data: tournamentData } = api.tournament.getAllTournamentData.useQuery({ tournamentId: parseInt(id) });
   const [pagination, setPagination] = useState<number>(0);
 
@@ -44,7 +42,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
   }
 
   return (
-    <SingleTournamentLayout tournamentAuthor={tournamentData.authorId as string} currentUserId={user.userId as string}>
+    <SingleTournamentLayout>
       <>
         <div className="flex justify-center items-center gap-4">
           <h1 className="text-center text-4xl font-semibold">

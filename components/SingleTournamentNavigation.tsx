@@ -7,13 +7,18 @@ import {
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils";
 import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs"
+import { type GetServerSidePropsContext } from "next";
 import Link from "next/link"
 import { useRouter } from "next/router";
+import { api } from "~/utils/api";
 
-const SingleTournamentNavigation = ({ tournamentAuthor, currentUserId }: { tournamentAuthor: string, currentUserId: string }) => {
+const SingleTournamentNavigation = () => {
   const router = useRouter();
   const user = useAuth();
-  
+  const { data: tournamentData } = api.tournament.getAllTournamentData.useQuery({ tournamentId: parseInt(router.query.id as string) });
+
+  if (!tournamentData) return null;
+
   return (
     <>
       <NavigationMenu className={cn({
@@ -30,29 +35,29 @@ const SingleTournamentNavigation = ({ tournamentAuthor, currentUserId }: { tourn
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem className="hidden lg:block">
-                <Link href={`/tournaments/${router.query.id as string}`} legacyBehavior passHref >
+                <Link href={`/tournaments/${id}`} legacyBehavior passHref >
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Tabulka
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem className="hidden lg:block">
-                <Link href={`/tournaments/${router.query.id as string}/my-tips`} legacyBehavior passHref>
+                <Link href={`/tournaments/${id}/my-tips`} legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Moje tipy
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
-              {(tournamentAuthor === currentUserId) && (<>
+              {(tournamentData?.authorId === user.userId) && (<>
                 <NavigationMenuItem className="hidden lg:block">
-                  <Link href={`/tournaments/${router.query.id as string}/manage-matches`} legacyBehavior passHref>
+                  <Link href={`/tournaments/${id}/manage-matches`} legacyBehavior passHref>
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                       Spravovat zápasy
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem className="hidden lg:block">
-                  <Link href={`/tournaments/${router.query.id as string}/manage-scorers`} legacyBehavior passHref>
+                  <Link href={`/tournaments/${id}/manage-scorers`} legacyBehavior passHref>
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                       Spravovat střelce
                     </NavigationMenuLink>
