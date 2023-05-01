@@ -8,11 +8,13 @@ import { Trash, Edit, Lock, Unlock } from "lucide-react";
 import { api } from "~/utils/api";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-import dayjs from "dayjs";
 import { useState } from "react";
 import clsx from "clsx";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
-type TEditedMatch = {
+export type TEditedMatch = {
   matchId: number;
   date: string;
   group: string;
@@ -22,11 +24,11 @@ type TEditedMatch = {
   awayTeamId: number;
   homeScore: number;
   awayScore: number;
-}
+} | null;
 
-export const ManageMatches = ({ id }: { id : string }) => {
+export const ManageMatches = ({ id }: { id: string }) => {
   const { user } = useUser();
-  const [editedMatch, setEditedMatch] = useState<TEditedMatch | null>(null);
+  const [editedMatch, setEditedMatch] = useState<TEditedMatch>(null);
   const utils = api.useContext();
   const { mutate: unlockMatch } = api.matches.unlockMatch.useMutation({
     onSuccess: () => {
@@ -73,12 +75,12 @@ export const ManageMatches = ({ id }: { id : string }) => {
       console.log(error);
     }
   });
-  const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: id });
+  const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: parseInt(id) });
   const { data: matches } = api.matches.getMatches.useQuery({ tournamentId: parseInt(id) });
 
   if (!user?.username || !matches) return null
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  const tournamentGroups = [... new Set(tournamentData?.teams.map(team => team.groupName))];
+  const tournamentGroups = [...new Set(tournamentData?.teams.map(team => team.groupName))];
   return (
     <SingleTournamentLayout>
       <>
@@ -224,7 +226,7 @@ export const ManageMatches = ({ id }: { id : string }) => {
                 <div className="flex flex-col gap-5">
                   <Input 
                     type="datetime-local"
-                    className="date-picker w-full"
+                    className="date-picker"
                     name="date"
                     value={props.values.date}
                     onChange={props.handleChange}
@@ -268,7 +270,7 @@ export const ManageMatches = ({ id }: { id : string }) => {
                   <Button type="submit" className="text-2xl uppercase font-semibold w-full" disabled={props.isSubmitting}>Vytvořit zápas</Button>
                 </div>
               </div>
-              {matches && (
+              {!!matches.length && (
                 <table>
                   <thead>
                     <tr>
@@ -282,7 +284,7 @@ export const ManageMatches = ({ id }: { id : string }) => {
                   <tbody>
                     {matches?.map(match => (
                     <tr key={match.id}>
-                      <td className="text-xl font-semibold text-center">{match.date.toISOString()}</td>
+                      <td className="text-xl font-semibold text-center">{dayjs(match.date).fromNow()}</td>
                       <td className="text-xl font-semibold text-center">{match.homeTeam.name}</td>
                       <td className="text-xl font-semibold text-center">{match.homeScore}:{match.awayScore}</td>
                       <td className="text-xl font-semibold text-center">{match.awayTeam.name}</td>
@@ -325,7 +327,6 @@ export const ManageMatches = ({ id }: { id : string }) => {
                             awayScore: match.awayScore
                           })
                         }} className="mx-auto cursor-pointer" size={20} />
-                        
                       </td>
                       <td className="text-xl font-semibold" colSpan={match.locked ? 3 : 1}>
                         {match.locked ? (

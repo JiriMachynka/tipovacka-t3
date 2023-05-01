@@ -4,13 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { api } from "~/utils/api";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import { Formik } from "formik";
 
 const CreateTournamentPage = () => {
   const router = useRouter();
-  const { userId } = useAuth();
   const { user } = useUser();
   const { data: userList } = api.users.getAllUsers.useQuery();
   const { mutate } = api.tournament.createTournament.useMutation({
@@ -22,7 +21,7 @@ const CreateTournamentPage = () => {
     }
   });
 
-  if (!userList || !userId) return null;
+  if (!userList) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#11132b]">
@@ -43,7 +42,6 @@ const CreateTournamentPage = () => {
 
           if (user?.username && allPlayers.map(player => userList.flatMap(user => user.username).includes(player))) {
             mutate({
-              authorId: userId,
               tournamentName,
               teams: teams.split("\n").map(team => team.split(",").filter(team => team.trim() !== "")),
               players: [user.username, ...allPlayers],

@@ -3,41 +3,201 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useClerk } from "@clerk/nextjs";
+import { useToast } from "@/components/ui/use-toast";
 import clsx from "clsx";
 import { Formik } from "formik";
-import { type GetServerSidePropsContext } from "next";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { api } from "~/utils/api";
+import { type GetServerSidePropsContext } from "next";
+import { Edit } from "lucide-react";
+import { type TEditedMatch } from "./manage-matches";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import dayjs from "dayjs";
 
-export const MyTips = ({ id }: { id : string }) => {
-  const { user } = useClerk();
+export const MyTips = ({ id }: { id: string }) => {
+  const { toast } = useToast();
+  const [myTipsOpened, setMyTipsOpened] = useState<boolean>(false);
+  const [editedMatch, setEditedMatch] = useState<TEditedMatch>(null);
+  const utils = api.useContext();
+
+  const { data: overallTipsData } = api.tournament.getTournamentOverallTips.useQuery({ tournamentId: parseInt(id) })
   const { data: groups } = api.teams.getGroups.useQuery({ tournamentId: parseInt(id) });
   const { data: sortedTeams } = api.teams.getSortedTeams.useQuery({ tournamentId: parseInt(id) })
-  const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: id });
-  // const { data: playerInfo } = api.players.getPlayer.useQuery({
-  //   tournamentId: parseInt(id),
-  //   username: user!.username as string
-  // });
-  // const { data: myTipsData } = api.players.getOverallTips.useQuery({ playerId: playerInfo!.id });
-  
-  const { mutate: updateMyTips } = api.players.updateOverallTips.useMutation();
+  const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: parseInt(id) });
+  const { data: userMatchTips } = api.matches.getPlayerMatches.useQuery();
+  const { data: scorers } = api.players.getPlayerScorers.useQuery({ tournamentId: parseInt(id) });
+  const { data: allScorers } = api.tournament.getScorers.useQuery({ tournamentId: parseInt(id) });
 
-  if (!tournamentData || !sortedTeams || !groups) return null
+  const { mutate: updateMyTips } = api.tournament.updateTournamentOverallTips.useMutation({
+    onSuccess() {
+      setMyTipsOpened(prev => !prev);
+      toast({
+        title: "Uloženo",
+        description: "Tipy byly úspěšně uloženy",
+      });
+    },
+    onError() {
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se uložit tipy",
+      });
+    }
+  });
+  const { mutate: updateUserMatchTip } = api.matches.updateUserMatchTip.useMutation({
+    onSuccess() {
+      toast({
+        title: "Uloženo",
+        description: "Tipy byl úspěšně uložen",
+      });
+      void utils.matches.invalidate();
+    },
+    onError() {
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se uložit tip",
+      });
+    }
+  })
+  const { mutate: updateScorers } = api.players.createScorer.useMutation({
+    onSuccess() {
+      toast({
+        title: "Uloženo",
+        description: "Střelci byli úspěšně uloženi",
+      });
+      void utils.matches.invalidate();
+    },
+    onError() {
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se uložit střelce",
+      });
+    }
+  });
+
+  if (!sortedTeams || !groups || !tournamentData || !overallTipsData || !userMatchTips) return null
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const tournamentGroups = [...new Set(tournamentData?.teams.map(team => team.groupName))];
 
   return (
     <SingleTournamentLayout>
       <>
-        <h1 className="text-center text-4xl font-semibold">Moje tipy</h1>
-        <Accordion type="single" collapsible className="w-1/2 mx-auto">
+      {editedMatch && (
+          <AlertDialog open={!!editedMatch}>
+            <AlertDialogContent className="bg-[#11132b]">
+              <Formik
+                initialValues={{
+                  date: dayjs(editedMatch.date).format("YYYY-MM-DDThh:mm"),
+                  matchId: editedMatch.matchId,
+                  group: editedMatch.group,
+                  homeTeam: editedMatch.homeTeam,
+                  awayTeam: editedMatch.awayTeam,
+                  homeScore: editedMatch.homeScore,
+                  awayScore: editedMatch.awayScore
+                }}
+                onSubmit={(values) => {
+                  updateUserMatchTip({
+                    matchId: values.matchId,
+                    homeScore: values.homeScore,
+                    awayScore: values.awayScore
+                  });
+                  setEditedMatch(null);
+                }}
+              >
+                {props => (
+                  <form onSubmit={props.handleSubmit}>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-3xl text-slate-50 text-center pb-5">Jsi v režimu úpravy zápasu</AlertDialogTitle>
+                      <AlertDialogDescription className="flex flex-col gap-3 text-xl font-bold text-slate-50 text-center py-2" asChild>
+                        <div className="flex flex-col">
+                          <div className="flex flex-col gap-5">
+                            <Input 
+                              type="datetime-local"
+                              className="date-picker w-full text-base"
+                              name="date"
+                              value={props.values.date}
+                              onChange={props.handleChange}
+                              disabled
+                            />
+                            <Select name="group" value={props.values.group} onValueChange={(value) => props.setFieldValue("group", value)} disabled>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Zvol skupinu" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {tournamentGroups.map((group: string) => (
+                                  <SelectItem key={group} value={group}>{group}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex gap-5">
+                            <div className="flex gap-5 w-full">
+                              <Select name="homeTeam" value={props.values.homeTeam} onValueChange={(value) => props.setFieldValue("homeTeam", value)} disabled>
+                                <SelectTrigger value={props.values.homeTeam}>
+                                  <SelectValue placeholder="Zvol domácí tým" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {tournamentData?.teams.filter(team => team.groupName === props.values.group).map(team => (
+                                    <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select name="awayTeam" value={props.values.awayTeam} onValueChange={(value) => props.setFieldValue("awayTeam", value)} disabled>
+                                <SelectTrigger value={props.values.awayTeam}>
+                                  <SelectValue placeholder="Zvol hostující tým" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {tournamentData?.teams.filter(team => team.groupName === props.values.group && team.name !== props.values.homeTeam).map(team => (
+                                    <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="flex gap-5">
+                            <Input
+                              type="number"
+                              min="0"
+                              onChange={props.handleChange}
+                              value={props.values.homeScore}
+                              name="homeScore"
+                              className="w-full"
+                            />
+                            <Input
+                              type="number"
+                              min="0"
+                              onChange={props.handleChange}
+                              value={props.values.awayScore}
+                              name="awayScore"
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-slate-100 text-black font-bold hover:bg-slate-300 text-lg" onClick={() => setEditedMatch(null)}>Zrušit</AlertDialogCancel>
+                      <AlertDialogAction asChild>
+                        <Button type="submit" className="text-lg bg-amber-600 text-black font-bold hover:bg-amber-500 focus:ring-amber-600">
+                          Upravit
+                        </Button>
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </form>
+                )}
+              </Formik>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+        <Accordion type="single" collapsible={myTipsOpened} className="w-1/2 mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-2xl uppercase">Moje tipy</AccordionTrigger>
             <AccordionContent>
               <Formik
                 initialValues={{
-                  winner: "",
-                  semifinalistFirst: "",
-                  semifinalistSecond: ""
+                  winner: overallTipsData.winner?.name || "",
+                  semifinalistFirst: overallTipsData.semifinalistFirst?.name || "",
+                  semifinalistSecond: overallTipsData.semifinalistSecond?.name || ""
                 }}
                 onSubmit={(values) => {
                   const winnerId = sortedTeams.filter(team => team.name === values.winner)[0]!.id;
@@ -49,6 +209,7 @@ export const MyTips = ({ id }: { id : string }) => {
                     semifinalistFirstId,
                     semifinalistSecondId
                   });
+
                 }}
               >
                 {props => (
@@ -57,7 +218,7 @@ export const MyTips = ({ id }: { id : string }) => {
                       <Label htmlFor="winner">Vítěz</Label>
                       <Select onValueChange={(value) => props.setFieldValue("winner", value)}>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Zvol vítěze" />
+                          <SelectValue placeholder={props.initialValues.winner || "Zvol vítěze"} />
                         </SelectTrigger>
                         <SelectContent className="flex flex-col">
                           {groups.map((group, groupIdx) => (
@@ -77,7 +238,7 @@ export const MyTips = ({ id }: { id : string }) => {
                       <Label htmlFor="semifinalistFirst">První semifinalista</Label>
                       <Select name="semifinalistFirst" onValueChange={(value) => props.setFieldValue("semifinalistFirst", value)}>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Zvol prvního semifinalisti" />
+                          <SelectValue placeholder={props.initialValues.semifinalistFirst || "Zvol prvního semifinalisti"} />
                         </SelectTrigger>
                         <SelectContent className="flex flex-col">
                           {groups.map((group, groupIdx) => (
@@ -97,7 +258,7 @@ export const MyTips = ({ id }: { id : string }) => {
                       <Label htmlFor="semifinalistSecond">Druhý semifinalista</Label>
                       <Select name="semifinalistSecond" onValueChange={(value) => props.setFieldValue("semifinalistSecond", value)}>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Zvol druhého semifinalisti" />
+                          <SelectValue placeholder={props.initialValues.semifinalistSecond || "Zvol druhého semifinalisti"} />
                         </SelectTrigger>
                         <SelectContent className="flex flex-col">
                           {groups.map((group, groupIdx) => (
@@ -120,6 +281,111 @@ export const MyTips = ({ id }: { id : string }) => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+        <Accordion type="single" collapsible={myTipsOpened} className="w-1/2 mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
+          <AccordionItem value="item-1">
+            <AccordionTrigger className="text-2xl uppercase">Střelci</AccordionTrigger>
+            <AccordionContent>
+              <Formik
+                initialValues={{
+                  scorerFirstFirstName: scorers?.scorerFirst?.firstName || "",
+                  scorerFirstLastName: scorers?.scorerFirst?.lastName || "",
+                  scorerSecondFirstName: scorers?.scorerSecond?.firstName  || "",
+                  scorerSecondLastName: scorers?.scorerSecond?.lastName || ""
+                }}
+                onSubmit={(values) => {
+                  console.log(values);
+                  const { scorerFirstFirstName, scorerFirstLastName, scorerSecondFirstName, scorerSecondLastName } = values;
+                  console.log(allScorers?.filter(scorer => scorer.firstName.includes(scorerFirstFirstName)));
+                  updateScorers({
+                    tournamentId: parseInt(id),
+                    scorerFirstFirstName,
+                    scorerFirstLastName,
+                    scorerSecondFirstName,
+                    scorerSecondLastName,
+                  });
+                }}
+              >
+                {props => (
+                  <form onSubmit={props.handleSubmit} className="flex flex-col mx-auto gap-5 w-[calc(100%-20px)]">
+                    <div className="flex flex-col gap-3">
+                      <h3 className="text-xl font-bold uppercase">První střelec</h3>
+                      <div className="flex gap-5">
+                        <div className="flex flex-col w-full relative">
+                          <Label>Jméno</Label>
+                          <Input type="text" className="w-full" name="scorerFirstFirstName" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.scorerFirstFirstName} />
+                        </div>
+                        <div className="flex flex-col w-full">
+                          <Label>Příjmení</Label>
+                          <Input type="text" className="w-full" name="scorerFirstLastName" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.scorerFirstLastName} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <h3 className="text-xl font-bold uppercase">Druhý střelec</h3>
+                      <div className="flex gap-5">
+                        <div className="flex flex-col w-full">
+                          <Label>Jméno</Label>
+                          <Input type="text" className="w-full" name="scorerSecondFirstName" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.scorerSecondFirstName} />
+                        </div>
+                        <div className="flex flex-col w-full">
+                          <Label>Příjmení</Label>
+                          <Input type="text" className="w-full" name="scorerSecondLastName" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.scorerSecondLastName} />
+                        </div>
+                      </div>
+                    </div>
+                    <Button type="submit">Uložit střelce</Button>
+                  </form>
+                )}
+              </Formik>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+        {userMatchTips.filter(matchTip => !matchTip.tournamentMatchTip.locked).length > 0 && (
+        <Accordion type="single" collapsible={myTipsOpened} className="w-1/2 mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
+          <AccordionItem value="item-1">
+            <AccordionTrigger className="text-2xl uppercase">Zápasy</AccordionTrigger>
+            <AccordionContent>
+              <table className="w-[calc(100%-20px)] mx-auto">
+                <thead>
+                  <tr>
+                    <th>Začátek zápasu</th>
+                    <th>Domácí</th>
+                    <th>Skóre</th>
+                    <th>Hosté</th>
+                    <th>Akce</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userMatchTips.filter(tip => !tip.tournamentMatchTip.locked).map(match => {
+                    return (
+                      <tr key={match.id}>
+                        <td className="text-xl font-semibold text-center py-3">{dayjs(match.tournamentMatchTip.date).fromNow()}</td>
+                        <td className="text-xl font-semibold text-center py-3">{match.tournamentMatchTip.homeTeam.name}</td>
+                        <td className="text-xl font-semibold text-center py-3">{match.homeScore}:{match.awayScore}</td>
+                        <td className="text-xl font-semibold text-center py-3">{match.tournamentMatchTip.awayTeam.name}</td>
+                        <td className="text-xl font-semibold py-3">
+                          <Edit onClick={() => {
+                            setEditedMatch({
+                              date: dayjs(match.tournamentMatchTip.date).format("YYYY-MM-DDThh:mm"),
+                              matchId: match.id,
+                              group: match.tournamentMatchTip.homeTeam.groupName,
+                              homeTeamId: match.tournamentMatchTip.homeTeam.id,
+                              awayTeamId: match.tournamentMatchTip.awayTeam.id,
+                              homeTeam: match.tournamentMatchTip.homeTeam.name,
+                              awayTeam: match.tournamentMatchTip.awayTeam.name,
+                              homeScore: match.homeScore,
+                              awayScore: match.awayScore
+                            })
+                          }} className="mx-auto cursor-pointer" size={25} />
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>)}
       </>
     </SingleTournamentLayout>
   )

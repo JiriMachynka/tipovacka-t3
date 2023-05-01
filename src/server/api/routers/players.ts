@@ -1,6 +1,5 @@
 import { z } from "zod";
-
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 
 export const playersRouter = createTRPCRouter({
   getPlayer: publicProcedure
@@ -10,7 +9,7 @@ export const playersRouter = createTRPCRouter({
     }))
     .query(async ({ ctx, input }) => {
       const { tournamentId, username } = input;
-      const player = await ctx.prisma.tournament.findUnique({
+      const player = await ctx.prisma.tournament.findFirst({
         where: {
           id: tournamentId,
         },
@@ -21,55 +20,88 @@ export const playersRouter = createTRPCRouter({
             },
           },
         },
-        
       });
       return player;
     }),
-  getOverallTips: publicProcedure
-    .input(z.object({
-      playerId: z.number(),
-    }))
-    .query(async ({ ctx, input }) => {
-      const { playerId } = input;
-      const tournamentOverallTip = await ctx.prisma.player.findUnique({
-        where: {
-          id: playerId,
-        },
-        include: {
-          tournamentOverallTips: true,
-        }
-      })
-      return tournamentOverallTip;
-    }),
-  updateOverallTips: publicProcedure
+  createScorer: protectedProcedure
     .input(z.object({
       tournamentId: z.number(),
-      winnerId: z.number(),
-      semifinalistFirstId: z.number(),
-      semifinalistSecondId: z.number(),
+      scorerFirstFirstName: z.string(),
+      scorerFirstLastName: z.string(),
+      scorerSecondFirstName: z.string(),
+      scorerSecondLastName: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { tournamentId, winnerId, semifinalistFirstId, semifinalistSecondId } = input;
-      await ctx.prisma.player.update({
-        where: { id: tournamentId },
-        data: {
-          tournamentOverallTips: {
-            upsert: {
-              create: {
-                tournamentId,
-                winnerId,
-                semifinalistFirstId,
-                semifinalistSecondId,
-              },
-              update: {
-                tournamentId,
-                winnerId,
-                semifinalistFirstId,
-                semifinalistSecondId,
-              }
-            }
-          }
+      const { tournamentId, scorerFirstFirstName, scorerFirstLastName, scorerSecondFirstName, scorerSecondLastName } = input;
+      const scorerFirstFound = await ctx.prisma.scorer.findFirst({
+        where: {
+          firstName: scorerFirstFirstName,
+          lastName: scorerFirstLastName,
+          tournamentId,
         }
       });
-    })
+      const scorerFirst = await ctx.prisma.scorer.upsert({
+        where: {
+          id: scorerFirstFound?.id || await ctx.prisma.scorer.count() + 1,
+        },
+        create: {
+          firstName: scorerFirstFirstName,
+          lastName: scorerFirstLastName,
+          tournamentId,
+        },
+        update: {
+          firstName: scorerFirstFirstName,
+          lastName: scorerFirstLastName,
+        }
+      });
+      const scorerSecondFound = await ctx.prisma.scorer.findFirst({
+        where: {
+          firstName: scorerSecondFirstName,
+          lastName: scorerSecondLastName,
+          tournamentId,
+        }
+      });
+      const scorerSecond = await ctx.prisma.scorer.upsert({
+        where: {
+          id: scorerSecondFound?.id || await ctx.prisma.scorer.count() + 1,
+        },
+        create: {
+          firstName: scorerSecondFirstName,
+          lastName: scorerSecondLastName,
+          tournamentId,
+        },
+        update: {
+          firstName: scorerSecondFirstName,
+          lastName: scorerSecondLastName,
+        }
+      }); 
+
+      await ctx.prisma.player.update({
+        where: {
+          id: ctx.auth.userId
+        },
+        data: {
+          scorerFirstId: scorerFirst.id,
+          scorerSecondId: scorerSecond.id,
+        }
+      });
+    }),
+  getPlayerScorers: protectedProcedure
+    .input(z.object({
+      tournamentId: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { tournamentId } = input;
+      const scorers = await ctx.prisma.player.findFirst({
+        where: {
+          id: ctx.auth.userId,
+          tournamentId: tournamentId
+        },
+        include: {
+          scorerFirst: true,
+          scorerSecond: true,
+        }
+      });
+      return scorers;
+    }),
 });

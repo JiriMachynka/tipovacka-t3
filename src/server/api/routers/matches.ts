@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 
 export const matchesRouter = createTRPCRouter({
   createMatch: publicProcedure
@@ -35,7 +35,7 @@ export const matchesRouter = createTRPCRouter({
         },
       });
     }),
-  getMatches: publicProcedure
+  getMatches: protectedProcedure
     .input(z.object({
       tournamentId: z.number(),
     }))
@@ -46,7 +46,7 @@ export const matchesRouter = createTRPCRouter({
           tournamentId,
         },
         orderBy: {
-          date: "desc",
+          date: "asc",
         },
         include: {
           homeTeam: true,
@@ -56,6 +56,28 @@ export const matchesRouter = createTRPCRouter({
       return matches;
     }
   ),
+  getPlayerMatches: protectedProcedure
+    .query(async ({ ctx }) => {
+      const matches = await ctx.prisma.userMatchTip.findMany({
+        where: {
+          playerId: ctx.auth.userId,
+        },
+        orderBy: {
+          tournamentMatchTip: {
+            date: "asc"
+          }
+        },
+        include: {
+          tournamentMatchTip: {
+            include: {
+              homeTeam: true,
+              awayTeam: true,
+            }
+          }
+        }
+      });
+      return matches;
+    }),
   updateMatch: publicProcedure
     .input(z.object({
       tournamentId: z.number(),
@@ -92,17 +114,41 @@ export const matchesRouter = createTRPCRouter({
         },
       });
     }),
+  updateUserMatchTip: protectedProcedure
+    .input(z.object({
+      matchId: z.number(),
+      homeScore: z.number(),
+      awayScore: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { matchId, homeScore, awayScore } = input;
+      await ctx.prisma.userMatchTip.update({
+        where: {
+          id: matchId,
+        },
+        data: {
+          homeScore,
+          awayScore,
+        },
+      });
+    }),
   deleteMatch: publicProcedure
     .input(z.object({
       matchId: z.number(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { matchId } = input;
-      await ctx.prisma.tournamentMatchTip.delete({
+      const deleteUsersMatchTip = ctx.prisma.userMatchTip.deleteMany({
+        where: {
+          tournamentMatchTipId: matchId,
+        }
+      });
+      const deleteTournamentMatchTip = ctx.prisma.tournamentMatchTip.delete({
         where: {
           id: matchId,
         },
       });
+      await ctx.prisma.$transaction([deleteUsersMatchTip, deleteTournamentMatchTip]);
     }
   ),
   lockMatch: publicProcedure
@@ -111,13 +157,37 @@ export const matchesRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const { matchId } = input;
-      await ctx.prisma.tournamentMatchTip.update({
+      const { id: tournamentMatchTipId, homeScore, awayScore } = await ctx.prisma.tournamentMatchTip.update({
         where: {
           id: matchId,
         },
         data: {
           locked: true,
         },
+      });
+      const userMatchTips = await ctx.prisma.userMatchTip.findMany({
+        where: {
+          tournamentMatchTipId,
+        },
+      });
+
+      userMatchTips.map(async (matchTip) => {
+        const draw = matchTip.homeScore === matchTip.awayScore && homeScore === awayScore;
+        const homeWin = matchTip.homeScore > matchTip.awayScore && homeScore > awayScore;
+        const awayWin = matchTip.homeScore < matchTip.awayScore && homeScore < awayScore;
+
+        const exactDraw = (matchTip.homeScore === homeScore) && (matchTip.homeScore === matchTip.awayScore && homeScore === awayScore);
+        const exactHomeWin = (matchTip.homeScore === homeScore && matchTip.awayScore === awayScore) && (matchTip.homeScore > matchTip.awayScore && homeScore > awayScore);
+        const exactAwayWin = (matchTip.homeScore === homeScore && matchTip.awayScore === awayScore) && (matchTip.homeScore < matchTip.awayScore && homeScore < awayScore);
+        
+        await ctx.prisma.userMatchTip.update({
+          where: {
+            id: matchTip.id,
+          },
+          data: {
+            points: (exactDraw || exactHomeWin || exactAwayWin) ? 3 : (draw || homeWin || awayWin) ? 1 : 0,
+          }
+        });
       });
     }),
   unlockMatch: publicProcedure
@@ -126,13 +196,22 @@ export const matchesRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const { matchId } = input;
-      await ctx.prisma.tournamentMatchTip.update({
+      const { id: tournamentMatchTipId } = await ctx.prisma.tournamentMatchTip.update({
         where: {
           id: matchId,
         },
         data: {
           locked: false,
         },
+      });
+
+      await ctx.prisma.userMatchTip.updateMany({
+        where: {
+          tournamentMatchTipId
+        },
+        data: {
+          points: null,
+        }
       });
     }),
 });
