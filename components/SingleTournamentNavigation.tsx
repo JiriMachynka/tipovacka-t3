@@ -35,14 +35,14 @@ const SingleTournamentNavigation = () => {
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem className="hidden lg:block">
-                <Link href={`/tournaments/${id}`} legacyBehavior passHref >
+                <Link href={`/tournaments/${router.query.id as string}`} legacyBehavior passHref >
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Tabulka
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem className="hidden lg:block">
-                <Link href={`/tournaments/${id}/my-tips`} legacyBehavior passHref>
+                <Link href={`/tournaments/${router.query.id as string}/my-tips`} legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Moje tipy
                   </NavigationMenuLink>
@@ -50,14 +50,14 @@ const SingleTournamentNavigation = () => {
               </NavigationMenuItem>
               {(tournamentData?.authorId === user.userId) && (<>
                 <NavigationMenuItem className="hidden lg:block">
-                  <Link href={`/tournaments/${id}/manage-matches`} legacyBehavior passHref>
+                  <Link href={`/tournaments/${router.query.id as string}/manage-matches`} legacyBehavior passHref>
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                       Spravovat zápasy
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem className="hidden lg:block">
-                  <Link href={`/tournaments/${id}/manage-scorers`} legacyBehavior passHref>
+                  <Link href={`/tournaments/${router.query.id as string}/manage-scorers`} legacyBehavior passHref>
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                       Spravovat střelce
                     </NavigationMenuLink>
