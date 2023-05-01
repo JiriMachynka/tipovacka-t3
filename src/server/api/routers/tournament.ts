@@ -5,13 +5,11 @@ import { type Player } from "@prisma/client";
 
 export const tournamentRouter = createTRPCRouter({
   createTournament: protectedProcedure
-    .input(
-      z.object({
-        tournamentName: z.string(),
-        teams: z.array(z.array(z.string())),
-        players: z.array(z.string()),
-      })
-    )
+    .input(z.object({
+      tournamentName: z.string(),
+      teams: z.array(z.array(z.string())),
+      players: z.array(z.string()),
+    }))
     .mutation(async ({ ctx, input }) => {
       const { tournamentName, players, teams } = input;
       const allPlayers = await clerkClient.users.getUserList();

@@ -44,7 +44,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
   }
 
   return (
-    <SingleTournamentLayout tournamentAuthor={tournamentData.authorId} currentUserId={user.userId}>
+    <SingleTournamentLayout tournamentAuthor={tournamentData.authorId as string} currentUserId={user.userId as string}>
       <>
         <div className="flex justify-center items-center gap-4">
           <h1 className="text-center text-4xl font-semibold">
