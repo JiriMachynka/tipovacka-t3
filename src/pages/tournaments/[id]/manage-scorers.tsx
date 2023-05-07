@@ -9,11 +9,11 @@ import { Edit } from "lucide-react";
 import { type GetServerSidePropsContext } from "next";
 import { useState } from "react";
 import { api } from "~/utils/api";
-import { type TEditedScorer } from "@/types";
+import { type EditedScorer } from "@/types";
 
 
 export const MyTips = ({ id }: { id: string }) => {
-  const [editedScorer, setEditedScorer] = useState<TEditedScorer>(null);
+  const [editedScorer, setEditedScorer] = useState<EditedScorer>(null);
   const { toast } = useToast();
   const utils = api.useContext();
   

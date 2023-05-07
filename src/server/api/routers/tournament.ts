@@ -51,9 +51,62 @@ export const tournamentRouter = createTRPCRouter({
         }),
       });
     }),
+  addPlayer: protectedProcedure
+    .input(z.object({
+      tournamentId: z.number(),
+      username: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { tournamentId, username } = input;
+      const user = (await clerkClient.users.getUserList()).filter(user => user.username === username)[0];
+      const player = await ctx.prisma.player.create({
+        data: {
+          id: user?.id as string,
+          tournamentId,
+        }
+      });
+      await ctx.prisma.tournamentOverallTips.create({
+        data: {
+          playerId: player.id,
+          tournamentId,
+        }
+      });
+      const matchTips = await ctx.prisma.tournamentMatchTip.findMany({
+        where: {
+          tournamentId,
+        }
+      });
+      await ctx.prisma.userMatchTip.createMany({
+        data: matchTips.map(matchTip => {
+          return {
+            playerId: player.id,
+            tournamentMatchTipId: matchTip.id,
+          };
+        })
+      });
+      return username;
+    }),
   getAllTournaments: protectedProcedure
     .query(async ({ ctx }) => {
-      const allTournaments = await ctx.prisma.tournament.findMany();
+      const allTournaments = await ctx.prisma.tournament.findMany({
+        where: {
+          OR: [
+            {
+              authorId: ctx.auth.userId,
+            },
+            {
+              players: {
+                some: {
+                  id: ctx.auth.userId,
+                }
+              }
+            }
+          ]
+        },
+        include: {
+          players: true,
+        }
+      });
       return allTournaments;
     }),
   getAllTournamentData: protectedProcedure
@@ -110,6 +163,25 @@ export const tournamentRouter = createTRPCRouter({
         },
       });
       return tournament;
+    }),
+  getTournamentPlayers: protectedProcedure
+    .input(z.object({
+      tournamentId: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { tournamentId } = input;
+      const players = await ctx.prisma.player.findMany({
+        where: {
+          tournamentId,
+        },
+        select: {
+          id: true,
+        }
+      });
+
+      const allUsers = await clerkClient.users.getUserList();
+      const playerData = players.map(player => allUsers.filter(user => user.id === player.id)[0]);
+      return playerData;
     }),
   getTournamentOverallTips: protectedProcedure
     .input(z.object({
@@ -184,6 +256,18 @@ export const tournamentRouter = createTRPCRouter({
         data: {
           goals,
           assists,
+        }
+      })
+    }),
+  deletePlayer: protectedProcedure
+    .input(z.object({
+      id: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input;
+      await ctx.prisma.player.delete({
+        where: {
+          id,
         }
       })
     }),

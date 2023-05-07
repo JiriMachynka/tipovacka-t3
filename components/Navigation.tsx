@@ -6,10 +6,11 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils";
-import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs"
+import { useAuth, SignInButton, useClerk } from "@clerk/nextjs"
 import Link from "next/link"
 
 const Navigation = () => {
+  const { signOut } = useClerk();
   const user = useAuth();
   
   return (
@@ -33,9 +34,7 @@ const Navigation = () => {
             "py-10": !user.isSignedIn,
           })}>
             {user.isSignedIn ? 
-              <SignOutButton>
-                <button>Odhlásit se</button>
-              </SignOutButton> 
+              <button onClick={() => signOut()}>Odhlásit se</button>
               : 
               <SignInButton>
                 <button className="text-5xl">Přihlásit se</button>

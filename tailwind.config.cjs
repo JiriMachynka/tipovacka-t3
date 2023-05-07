@@ -1,4 +1,3 @@
-// @ts-nocheck
 const { fontFamily } = require("tailwindcss/defaultTheme");
 
 /** @type {import('tailwindcss').Config} */
@@ -11,6 +10,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      backgroundColor: {
+        "primary": "#11132b"
+      },
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
       },

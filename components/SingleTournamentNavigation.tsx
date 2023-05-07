@@ -1,8 +1,11 @@
 import {
+  ListItem,
   NavigationMenu,
+  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
+  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils";
@@ -48,19 +51,15 @@ const SingleTournamentNavigation = () => {
                 </Link>
               </NavigationMenuItem>
               {(tournamentData?.authorId === user.userId) && (<>
-                <NavigationMenuItem className="hidden lg:block">
-                  <Link href={`/tournaments/${router.query.id as string}/manage-matches`} legacyBehavior passHref>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Spravovat zápasy
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem className="hidden lg:block">
-                  <Link href={`/tournaments/${router.query.id as string}/manage-scorers`} legacyBehavior passHref>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Spravovat střelce
-                    </NavigationMenuLink>
-                  </Link>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Admin sekce</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="flex flex-col w-[300px] bg-[#11132b]">
+                      <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-matches`} title="Spravovat zápasy" />
+                      <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-scorers`} title="Spravovat zápasy" />
+                      <ListItem href={`/tournaments/${router.query.id as string}/manage-players`} title="Spravovat hráče" />
+                    </ul>
+                  </NavigationMenuContent>
                 </NavigationMenuItem>
               </>)}
             </>

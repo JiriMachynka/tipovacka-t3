@@ -9,7 +9,7 @@ import { Fragment, useState } from "react";
 import { api } from "~/utils/api";
 import { type GetServerSidePropsContext } from "next";
 import { Edit } from "lucide-react";
-import { type TEditedMatch } from "@/types";
+import { type EditedMatch } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import dayjs from "dayjs";
@@ -19,7 +19,7 @@ import { type Team } from "@prisma/client";
 export const MyTips = ({ id }: { id: string }) => {
   const { toast } = useToast();
   const [myTipsOpened, setMyTipsOpened] = useState<boolean>(false);
-  const [editedMatch, setEditedMatch] = useState<TEditedMatch>(null);
+  const [editedMatch, setEditedMatch] = useState<EditedMatch>(null);
   const utils = api.useContext();
 
   const { data: overallTipsData } = api.tournament.getTournamentOverallTips.useQuery({ tournamentId: parseInt(id) })

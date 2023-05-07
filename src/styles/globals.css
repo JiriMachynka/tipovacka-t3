@@ -13,4 +13,12 @@
   table, tr, td, th {
     @apply border-2 border-slate-50;
   }
+
+  thead {
+    @apply text-xl;
+  }
+
+  th, td {
+    @apply px-2 py-1;
+  }
 }

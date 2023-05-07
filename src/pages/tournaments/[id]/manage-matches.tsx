@@ -12,13 +12,13 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { cn } from "@/lib/utils";
-import { type TEditedMatch } from "@/types";
+import { type EditedMatch } from "@/types";
 dayjs.extend(relativeTime);
 
 
 export const ManageMatches = ({ id }: { id: string }) => {
   const { user } = useUser();
-  const [editedMatch, setEditedMatch] = useState<TEditedMatch>(null);
+  const [editedMatch, setEditedMatch] = useState<EditedMatch>(null);
   const utils = api.useContext();
   const { mutate: unlockMatch } = api.matches.unlockMatch.useMutation({
     onSuccess: () => {
