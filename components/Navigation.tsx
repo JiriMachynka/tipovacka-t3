@@ -8,6 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth, SignInButton, useClerk } from "@clerk/nextjs"
 import Link from "next/link"
+import { Button } from "./ui/button";
 
 const Navigation = () => {
   const { signOut } = useClerk();
@@ -37,7 +38,7 @@ const Navigation = () => {
               <button onClick={() => signOut()}>Odhlásit se</button>
               : 
               <SignInButton>
-                <button className="text-5xl">Přihlásit se</button>
+                <Button className="text-5xl py-10">Přihlásit se</Button>
               </SignInButton>
             }
           </NavigationMenuLink>
