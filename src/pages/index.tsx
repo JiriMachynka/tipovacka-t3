@@ -13,7 +13,7 @@ const Home: NextPage = () => {
   }, []);
 
   return (
-    <main className="mx-3 lg:mx-0 flex min-h-screen bg-primary">
+    <main className="flex min-h-screen bg-primary">
       <Navigation />
     </main>
   );

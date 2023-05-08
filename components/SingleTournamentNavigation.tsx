@@ -70,6 +70,16 @@ const SingleTournamentNavigation = () => {
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
+              <NavigationMenuItem className={cn("lg:block", {
+                "hidden": !mobileNav,
+                "block": mobileNav
+              })}>
+                <Link href={`/tournaments/${router.query.id as string}/leaderboard`} legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Žebříček
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
               {(tournamentData?.authorId === user.userId) && (<>
                 <NavigationMenuItem className={cn("hidden lg:inline-flex")}>
                   <NavigationMenuTrigger>Admin sekce</NavigationMenuTrigger>

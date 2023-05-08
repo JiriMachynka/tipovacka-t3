@@ -62,7 +62,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
               </div>
             ))}
           </div>
-          <div className="flex border border-slate-50 overflow-x-auto">
+          <div className="flex border border-slate-50 overflow-x-auto custom-scrollbar">
             {tournamentData?.tournamentMatchTips?.map(matchTip => (
               <div key={matchTip.id} className="[&:not(:last-child)]:border-r border-r-slate-50">
                 <div className="border-b border-b-slate-50 flex flex-col lg:flex-row p-0 lg:p-3 gap-0 lg:gap-2">
