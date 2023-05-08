@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAuth, SignInButton, useClerk } from "@clerk/nextjs"
 import Link from "next/link"
 import { Button } from "./ui/button";
+import { LogOut } from "lucide-react";
 
 const Navigation = () => {
   const { signOut } = useClerk();
@@ -32,14 +33,14 @@ const Navigation = () => {
         }
         <NavigationMenuItem>
           <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "cursor-pointer", {
-            "py-10": !user.isSignedIn,
+            "text-5xl py-10": !user.isSignedIn,
           })}>
             {user.isSignedIn ? 
-              <button onClick={() => signOut()}>Odhlásit se</button>
+              <button onClick={() => signOut()}>
+                <LogOut />
+              </button>
               : 
-              <SignInButton>
-                <Button className="text-5xl py-10">Přihlásit se</Button>
-              </SignInButton>
+              <SignInButton>Přihlásit se</SignInButton>
             }
           </NavigationMenuLink>
         </NavigationMenuItem>

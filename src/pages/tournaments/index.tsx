@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Link from "next/link";
 import Loading from "@/components/Loading";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 const Home = () => {
+	const session = useAuth();
+	const router = useRouter();
 	const { isLoading, data: allTournaments } = api.tournament.getAllTournaments.useQuery();
+
+	useEffect(() => {
+		if (!session.userId) void router.push("/"); 
+	}, []);
 
 	return (
 		<>
