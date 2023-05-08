@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 
 const Navigation = () => {
-  const { signOut, openSignIn } = useClerk();
+  const { signOut, openSignIn, redirectToSignIn } = useClerk();
   const user = useAuth();
 
   return (
@@ -37,7 +37,7 @@ const Navigation = () => {
               <LogOut />
             </Button>
             : 
-            <Button className="py-10 text-5xl" onClick={() => openSignIn()}>Přihlásit se</Button>
+            <Button type="button" className="py-10 text-5xl" onClick={() => openSignIn()}>Přihlásit se</Button>
           }
         </NavigationMenuItem>
       </NavigationMenuList>
