@@ -32,7 +32,7 @@ const Navigation = () => {
           </>
         }
         <NavigationMenuItem>
-          <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "cursor-pointer", {
+          <NavigationMenuLink className={cn(`cursor-pointer ${navigationMenuTriggerStyle()}`, {
             "text-5xl py-10": !user.isSignedIn,
           })}>
             {user.isSignedIn ? 
