@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 
 const Navigation = () => {
-  const { signOut, openSignIn, redirectToSignIn } = useClerk();
+  const { signOut, openSignIn } = useClerk();
   const user = useAuth();
 
   return (
