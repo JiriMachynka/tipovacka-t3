@@ -6,13 +6,13 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils";
-import { useAuth, SignInButton, useClerk } from "@clerk/nextjs"
+import { useAuth, useClerk } from "@clerk/nextjs"
 import Link from "next/link"
 import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 
 const Navigation = () => {
-  const { signOut } = useClerk();
+  const { signOut, openSignIn } = useClerk();
   const user = useAuth();
 
   return (
@@ -32,17 +32,13 @@ const Navigation = () => {
           </>
         }
         <NavigationMenuItem>
-          <NavigationMenuLink className={cn(`cursor-pointer ${navigationMenuTriggerStyle()}`, {
-            "text-5xl py-10": !user.isSignedIn,
-          })}>
-            {user.isSignedIn ? 
-              <button onClick={() => signOut()}>
-                <LogOut />
-              </button>
-              : 
-              <SignInButton>Přihlásit se</SignInButton>
-            }
-          </NavigationMenuLink>
+          {user.isSignedIn ? 
+            <Button onClick={() => signOut()}>
+              <LogOut />
+            </Button>
+            : 
+            <Button className="py-10 text-5xl" onClick={() => openSignIn()}>Přihlásit se</Button>
+          }
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
