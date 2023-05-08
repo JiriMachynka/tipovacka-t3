@@ -1,3 +1,4 @@
+import Loading from "@/components/Loading";
 import SingleTournamentLayout from "@/components/SingleTournamentLayout";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ export const MyTips = ({ id }: { id: string }) => {
 	const { userId } = useAuth();
 	const [deletedPlayer, setDeletedPlayer] = useState<DeletedPlayer>(null);
 	const utils = api.useContext();
-	const { data: players } = api.tournament.getTournamentPlayers.useQuery({ tournamentId: parseInt(id) });
+	const { isLoading, data: players } = api.tournament.getTournamentPlayers.useQuery({ tournamentId: parseInt(id) });
 
 	const { mutate: addPlayer } = api.tournament.addPlayer.useMutation({
 		onSuccess(data) {
@@ -52,14 +53,13 @@ export const MyTips = ({ id }: { id: string }) => {
     }
 	});
 
-	if (!players) return null;
-
 	return (
 		<SingleTournamentLayout>
+			{isLoading ? <Loading /> : (
 			<>
 				{deletedPlayer && (
 					<AlertDialog open={!!deletedPlayer}>
-					<AlertDialogContent className="bg-[#11132b]">
+					<AlertDialogContent className="bg-primary">
 						<Formik
 							initialValues={{
 								id: deletedPlayer?.id as string,
@@ -108,14 +108,13 @@ export const MyTips = ({ id }: { id: string }) => {
 					}}
 				>
 					{props => (
-						<form onSubmit={props.handleSubmit} className="w-1/2 mx-auto">
+						<form onSubmit={props.handleSubmit} className="w-full lg:w-1/2 lg:mx-auto">
 							<div className="flex flex-col gap-3">
 								<Label htmlFor="username" >Přezdívka hráče</Label>
 								<div className="flex gap-3">
-									<Input id="username" name="username" autoComplete="off" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.username} className="w-[70%]" type="text" />
+									<Input id="username" name="username" autoComplete="off" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.username} className="w-fit lg:w-[70%]" type="text" />
 									<Button type="submit">Přidat hráče</Button>
 								</div>
-
 							</div>
 						</form>
 					)}
@@ -129,7 +128,7 @@ export const MyTips = ({ id }: { id: string }) => {
 						</tr>
 					</thead>
 					<tbody>
-						{players.map((player) => {
+						{players?.map((player) => {
 							if (player?.id !== userId) {
 								return (
 									<tr key={player?.id}>
@@ -151,6 +150,7 @@ export const MyTips = ({ id }: { id: string }) => {
 					</tbody>
 				</table>
 			</>
+			)}
 		</SingleTournamentLayout>
 	)
 }

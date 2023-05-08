@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    font-family: "Poppins", "Verdana", "Times New Roman";
+    scroll-behavior: smooth;
+    scroll-margin: 0;
+  }
+}
+
 @layer components {
   .date-picker {
     @apply bg-transparent border border-slate-50 rounded-md px-3 py-2 !w-full;
@@ -19,6 +27,14 @@
   }
 
   th, td {
-    @apply px-2 py-1;
+    @apply px-2 py-1 font-semibold;
+  }
+
+  th {
+    @apply text-base lg:text-2xl;
+  }
+
+  td {
+    @apply text-sm lg:text-lg;
   }
 }

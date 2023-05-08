@@ -24,7 +24,7 @@ const CreateTournamentPage = () => {
   if (!userList) return null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#11132b]">
+    <div className="flex flex-col min-h-screen bg-primary">
       <Link href="/tournaments" className="w-fit mx-auto">
         <Button>
           Zpět na tipovačky

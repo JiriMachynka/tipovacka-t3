@@ -13,8 +13,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { cn } from "@/lib/utils";
 import { type EditedMatch } from "@/types";
+import Loading from "@/components/Loading";
 dayjs.extend(relativeTime);
-
 
 export const ManageMatches = ({ id }: { id: string }) => {
   const { user } = useUser();
@@ -66,17 +66,19 @@ export const ManageMatches = ({ id }: { id: string }) => {
     }
   });
   const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: parseInt(id) });
-  const { data: matches } = api.matches.getMatches.useQuery({ tournamentId: parseInt(id) });
+  const { isLoading, data: matches } = api.matches.getMatches.useQuery({ tournamentId: parseInt(id) });
 
-  if (!user?.username || !matches) return null
+  if (!user?.username) return null
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   const tournamentGroups = [...new Set(tournamentData?.teams.map(team => team.groupName))];
+
   return (
     <SingleTournamentLayout>
+      {isLoading ? <Loading /> : (
       <>
         {editedMatch && (
           <AlertDialog open={!!editedMatch}>
-            <AlertDialogContent className="bg-[#11132b]">
+            <AlertDialogContent className="bg-primary">
               <Formik
                 initialValues={{
                   date: dayjs(editedMatch.date).format("YYYY-MM-DDThh:mm"),
@@ -185,7 +187,6 @@ export const ManageMatches = ({ id }: { id: string }) => {
             </AlertDialogContent>
           </AlertDialog>
         )}
-        <h1 className="text-center text-2xl font-semibold uppercase">Spravovat zápasy</h1>
         <Formik
           initialValues={{
             date: "",
@@ -212,7 +213,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
         >
           {props => (
             <form onSubmit={props.handleSubmit} className="flex flex-col gap-10">
-              <div className="flex flex-col gap-3 mx-auto w-1/2">
+              <div className="flex flex-col gap-3 mx-auto w-full lg:w-1/2">
                 <div className="flex flex-col gap-5">
                   <Input 
                     type="datetime-local"
@@ -260,27 +261,25 @@ export const ManageMatches = ({ id }: { id: string }) => {
                   <Button type="submit" className="text-2xl uppercase font-semibold w-full" disabled={props.isSubmitting}>Vytvořit zápas</Button>
                 </div>
               </div>
-              {!!matches.length && (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Začátek zápasu</th>
-                      <th>Domácí</th>
-                      <th>Skóre</th>
-                      <th>Hosté</th>
-                      <th colSpan={3}>Akce</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matches?.map(match => (
-                    <tr key={match.id}>
-                      <td className="text-xl font-semibold text-center">{dayjs(match.date).fromNow()}</td>
-                      <td className="text-xl font-semibold text-center">{match.homeTeam.name}</td>
-                      <td className="text-xl font-semibold text-center">{match.homeScore}:{match.awayScore}</td>
-                      <td className="text-xl font-semibold text-center">{match.awayTeam.name}</td>
-                      <td className={cn("text-xl font-semibold", {
-                        "hidden": match.locked
-                      })}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Start</th>
+                    <th>Domácí</th>
+                    <th>Skóre</th>
+                    <th>Hosté</th>
+                    <th>Akce</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {matches?.map(match => (
+                  <tr key={match.id}>
+                    <td className="font-semibold text-center">{match.played ? "Odehráno" : dayjs(match.date).fromNow()}</td>
+                    <td className="font-semibold text-center">{match.homeTeam.name}</td>
+                    <td className="font-semibold text-center">{match.homeScore}:{match.awayScore}</td>
+                    <td className="font-semibold text-center">{match.awayTeam.name}</td>
+                    <td className={`flex flex-col lg:grid ${match.locked ? "lg:grid-cols-1" : "lg:grid-cols-3"} !p-0 border-none`}>
+                      <div className={cn(`${match.locked ? "hidden" : "px-2 py-1 border-b border-b-slate-50 lg:border-b-0 lg:border-r lg:border-r-slate-50 lg:py-2"}`)}>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Trash className="mx-auto cursor-pointer" size={20} />
@@ -300,10 +299,8 @@ export const ManageMatches = ({ id }: { id: string }) => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                      </td>
-                      <td className={cn("text-xl font-semibold", {
-                        "hidden": match.locked
-                      })}>
+                      </div>
+                      <div className={cn(`${match.locked ? "hidden" : "px-2 py-1 border-b border-b-slate-50 lg:border-b-0 lg:border-r lg:border-r-slate-50 lg:py-2"}`)}>
                         <Edit onClick={() => {
                           setEditedMatch({
                             date: dayjs(match.date).format("YYYY-MM-DDThh:mm"),
@@ -317,8 +314,8 @@ export const ManageMatches = ({ id }: { id: string }) => {
                             awayScore: match.awayScore
                           })
                         }} className="mx-auto cursor-pointer" size={20} />
-                      </td>
-                      <td className="text-xl font-semibold" colSpan={match.locked ? 3 : 1}>
+                      </div>
+                      <div className="px-2 py-1 lg:py-2">
                         {match.locked ? (
                           <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -360,16 +357,17 @@ export const ManageMatches = ({ id }: { id: string }) => {
                             </AlertDialogContent>
                           </AlertDialog>
                         )}
-                      </td>
-                    </tr> 
-                  ))}
-                  </tbody>
-                </table>
-              )}
+                      </div>
+                    </td>
+                  </tr> 
+                ))}
+                </tbody>
+              </table>
             </form>
           )}
         </Formik>
       </>
+      )}
     </SingleTournamentLayout>
   )
 }

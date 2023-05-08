@@ -164,6 +164,7 @@ export const matchesRouter = createTRPCRouter({
         },
         data: {
           locked: true,
+          played: true,
         },
       });
       const userMatchTips = await ctx.prisma.userMatchTip.findMany({

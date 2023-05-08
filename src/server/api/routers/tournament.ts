@@ -196,6 +196,7 @@ export const tournamentRouter = createTRPCRouter({
         },
         include: {
           winner: true,
+          finalist: true,
           semifinalistFirst: true,
           semifinalistSecond: true,
         }
@@ -206,11 +207,12 @@ export const tournamentRouter = createTRPCRouter({
     .input(z.object({
       tournamentId: z.number(),
       winnerId: z.number(),
+      finalistId: z.number(),
       semifinalistFirstId: z.number(),
       semifinalistSecondId: z.number(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { tournamentId, winnerId, semifinalistFirstId, semifinalistSecondId } = input;
+      const { tournamentId, winnerId, finalistId, semifinalistFirstId, semifinalistSecondId } = input;
       const userTournamentOverallTip = await ctx.prisma.tournamentOverallTips.findFirst({
         where: {
           tournamentId,
@@ -223,6 +225,7 @@ export const tournamentRouter = createTRPCRouter({
         },
         data: {
           winnerId,
+          finalistId,
           semifinalistFirstId,
           semifinalistSecondId,
         }

@@ -10,6 +10,7 @@ import { type GetServerSidePropsContext } from "next";
 import { useState } from "react";
 import { api } from "~/utils/api";
 import { type EditedScorer } from "@/types";
+import Loading from "@/components/Loading";
 
 
 export const MyTips = ({ id }: { id: string }) => {
@@ -17,7 +18,7 @@ export const MyTips = ({ id }: { id: string }) => {
   const { toast } = useToast();
   const utils = api.useContext();
   
-  const { data: scorers } = api.tournament.getScorers.useQuery({ tournamentId: parseInt(id) });
+  const { isLoading, data: scorers } = api.tournament.getScorers.useQuery({ tournamentId: parseInt(id) });
   
   const { mutate: updateScorer } = api.tournament.updateScorer.useMutation({
     onSuccess() {
@@ -37,14 +38,13 @@ export const MyTips = ({ id }: { id: string }) => {
     }
   });
 
-  if (!scorers) return <h2>Na turnaji nejsou zatím žádní střelci</h2>
-
   return (
     <SingleTournamentLayout>
+      {isLoading ? <Loading /> : (
       <>
         {editedScorer && (
           <AlertDialog open={!!editedScorer}>
-            <AlertDialogContent className="bg-[#11132b]">
+            <AlertDialogContent className="bg-primary">
               <Formik
                 initialValues={{
                   goals: editedScorer.goals,
@@ -103,7 +103,7 @@ export const MyTips = ({ id }: { id: string }) => {
             </tr>
           </thead>
           <tbody>
-            {scorers.map(scorer => {
+            {scorers?.map(scorer => {
               return (
                 <tr key={scorer.id} className="text-center">
                   <td>{scorer.firstName} {scorer.lastName}</td>
@@ -126,6 +126,7 @@ export const MyTips = ({ id }: { id: string }) => {
           </tbody>
         </table>
       </>
+      )}
     </SingleTournamentLayout>
   )
 }

@@ -13,9 +13,9 @@ import { Button } from "./ui/button";
 const Navigation = () => {
   const { signOut } = useClerk();
   const user = useAuth();
-  
+
   return (
-    <NavigationMenu className={cn("mx-auto mt-5", {
+    <NavigationMenu className={cn("mx-auto my-4", {
       "my-auto": !user.isSignedIn,
     })}>
       <NavigationMenuList>

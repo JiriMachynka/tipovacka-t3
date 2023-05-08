@@ -45,6 +45,7 @@ model Team {
     homeTeam           TournamentMatchTip[]    @relation("homeTeam")
     awayTeam           TournamentMatchTip[]    @relation("awayTeam")
     winner             TournamentOverallTips[] @relation("winner")
+    finalist           TournamentOverallTips[] @relation("finalist")
     semifinalistFirst  TournamentOverallTips[] @relation("semifinalistFirst")
     semifinalistSecond TournamentOverallTips[] @relation("semifinalistSecond")
 
@@ -58,6 +59,8 @@ model TournamentOverallTips {
     playerId             String
     winnerId             Int?
     winner               Team?      @relation(name: "winner", fields: [winnerId], references: [id])
+    finalistId           Int?
+    finalist             Team?      @relation(name: "finalist", fields: [finalistId], references: [id])
     semifinalistFirstId  Int?
     semifinalistFirst    Team?      @relation(name: "semifinalistFirst", fields: [semifinalistFirstId], references: [id])
     semifinalistSecondId Int?

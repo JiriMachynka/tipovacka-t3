@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import _ from "lodash";
+import { clerkClient } from "@clerk/nextjs/server";
+import { UserMatchTip } from "@prisma/client";
 
 export const playersRouter = createTRPCRouter({
   createScorer: protectedProcedure
@@ -82,5 +85,36 @@ export const playersRouter = createTRPCRouter({
         }
       });
       return scorers;
+    }),
+  getLeaderboardData: protectedProcedure
+    .input(z.object({
+      tournamentId: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { tournamentId } = input;
+      const leaderboard = await ctx.prisma.player.findMany({
+        where: {
+          tournamentId,
+        },
+        include: {
+          matchTips: true,
+        },
+      });
+      const leaderboardData = _.groupBy(leaderboard.map(user => user.matchTips).flat(), "playerId");
+      const users = await clerkClient.users.getUserList();
+      return _.sortBy(Object.keys(leaderboardData).map(playerId => {
+        return leaderboardData[playerId]?.reduce((prev, curr) => {
+          return {
+            ...curr,
+            points: (prev.points || 0) + (curr.points || 0),
+          }
+        });
+      }).map(matchTip => {
+        const user = users.find(user => user.id === matchTip?.playerId);
+        return {
+          ...matchTip,
+          username: user!.username,
+        }
+      }), ["points"]).reverse();
     }),
 });

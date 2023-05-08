@@ -11,7 +11,10 @@ module.exports = {
   theme: {
     extend: {
       backgroundColor: {
-        "primary": "#11132b"
+        "primary": "#11132b",
+        "gold": "#ffd700",
+        "silver": "#C0c0c0",
+        "bronze": "#Cd7f32",
       },
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],

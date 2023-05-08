@@ -12,9 +12,15 @@ import { Edit } from "lucide-react";
 import { type EditedMatch } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-import dayjs from "dayjs";
 import { cn } from "@/lib/utils";
 import { type Team } from "@prisma/client";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import updateLocale from "dayjs/plugin/updateLocale";
+import "dayjs/locale/cs";
+dayjs.locale("cs");
+dayjs.extend(relativeTime);
+dayjs.extend(updateLocale);
 
 export const MyTips = ({ id }: { id: string }) => {
   const { toast } = useToast();
@@ -35,13 +41,13 @@ export const MyTips = ({ id }: { id: string }) => {
       setMyTipsOpened(prev => !prev);
       toast({
         title: "Uloženo",
-        description: "Tipy byly úspěšně uloženy",
+        description: "Tip byly úspěšně uloženy",
       });
     },
     onError() {
       toast({
         title: "Chyba",
-        description: "Nepodařilo se uložit tipy",
+        description: "Nepodařilo se uložit tip",
       });
     }
   });
@@ -85,7 +91,7 @@ export const MyTips = ({ id }: { id: string }) => {
       <>
       {editedMatch && (
           <AlertDialog open={!!editedMatch}>
-            <AlertDialogContent className="bg-[#11132b]">
+            <AlertDialogContent className="bg-primary">
               <Formik
                 initialValues={{
                   date: dayjs(editedMatch.date).format("YYYY-MM-DDThh:mm"),
@@ -190,13 +196,14 @@ export const MyTips = ({ id }: { id: string }) => {
             </AlertDialogContent>
           </AlertDialog>
         )}
-        <Accordion type="single" collapsible={myTipsOpened} className="w-1/2 mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
+        <Accordion type="single" collapsible={myTipsOpened} className="w-full lg:w-1/2 lg:mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-2xl uppercase">Moje tipy</AccordionTrigger>
             <AccordionContent>
               <Formik
                 initialValues={{
                   winner: overallTipsData?.winner?.name || "",
+                  finalist: overallTipsData?.finalist?.name || "",
                   semifinalistFirst: overallTipsData?.semifinalistFirst?.name || "",
                   semifinalistSecond: overallTipsData?.semifinalistSecond?.name || ""
                 }}
@@ -204,12 +211,15 @@ export const MyTips = ({ id }: { id: string }) => {
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   const winnerId = sortedTeams.filter(team => team.name === values.winner)[0]!.id;
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  const finalistId = sortedTeams.filter(team => team.name === values.finalist)[0]!.id;
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   const semifinalistFirstId = sortedTeams.filter(team => team.name === values.semifinalistFirst)[0]!.id;
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   const semifinalistSecondId = sortedTeams.filter(team => team.name === values.semifinalistSecond)[0]!.id;
                   updateMyTips({
                     tournamentId: parseInt(id),
                     winnerId,
+                    finalistId,
                     semifinalistFirstId,
                     semifinalistSecondId
                   });
@@ -239,10 +249,30 @@ export const MyTips = ({ id }: { id: string }) => {
                       </Select>
                     </div>
                     <div className="flex flex-col gap-3">
+                      <Label htmlFor="finalist">Finalista</Label>
+                      <Select onValueChange={(value) => props.setFieldValue("finalist", value)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={props.initialValues.finalist || "Zvol finalistu"} />
+                        </SelectTrigger>
+                        <SelectContent className="flex flex-col">
+                          {groups.map((group, groupIdx) => (
+                            sortedTeams.filter(team => team.groupName === group.groupName).map((team, idx) => (
+                              <Fragment key={`${group.groupName}${idx}`}>
+                                {idx === 0 && <SelectGroup key={group.groupName} className={cn("px-5 font-bold text-lg", {
+                                  "mt-2": groupIdx !== 0
+                                })}>{group.groupName}</SelectGroup>}
+                                <SelectItem key={team.id} value={team.name} className="text-md">{team.name}</SelectItem>
+                              </Fragment>
+                            ))
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-3">
                       <Label htmlFor="semifinalistFirst">První semifinalista</Label>
                       <Select name="semifinalistFirst" onValueChange={(value) => props.setFieldValue("semifinalistFirst", value)}>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder={props.initialValues.semifinalistFirst || "Zvol prvního semifinalisti"} />
+                          <SelectValue placeholder={props.initialValues.semifinalistFirst || "Zvol prvního semifinalistu"} />
                         </SelectTrigger>
                         <SelectContent className="flex flex-col">
                           {groups.map((group, groupIdx) => (
@@ -262,7 +292,7 @@ export const MyTips = ({ id }: { id: string }) => {
                       <Label htmlFor="semifinalistSecond">Druhý semifinalista</Label>
                       <Select name="semifinalistSecond" onValueChange={(value) => props.setFieldValue("semifinalistSecond", value)}>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder={props.initialValues.semifinalistSecond || "Zvol druhého semifinalisti"} />
+                          <SelectValue placeholder={props.initialValues.semifinalistSecond || "Zvol druhého semifinalistu"} />
                         </SelectTrigger>
                         <SelectContent className="flex flex-col">
                           {groups.map((group, groupIdx) => (
@@ -285,7 +315,7 @@ export const MyTips = ({ id }: { id: string }) => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-        <Accordion type="single" collapsible={myTipsOpened} className="w-1/2 mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
+        <Accordion type="single" collapsible={myTipsOpened} className="w-full lg:w-1/2 lg:mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-2xl uppercase">Střelci</AccordionTrigger>
             <AccordionContent>
@@ -345,14 +375,14 @@ export const MyTips = ({ id }: { id: string }) => {
           </AccordionItem>
         </Accordion>
         {userMatchTips.filter(matchTip => !matchTip.tournamentMatchTip.locked).length > 0 && (
-        <Accordion type="single" collapsible={myTipsOpened} className="w-1/2 mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
+        <Accordion type="single" collapsible={myTipsOpened} className="w-full lg:w-1/2 lg:mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-2xl uppercase">Zápasy</AccordionTrigger>
             <AccordionContent>
               <table className="w-[calc(100%-20px)] mx-auto">
                 <thead>
                   <tr>
-                    <th>Začátek zápasu</th>
+                    <th>Start</th>
                     <th>Domácí</th>
                     <th>Skóre</th>
                     <th>Hosté</th>
@@ -363,11 +393,11 @@ export const MyTips = ({ id }: { id: string }) => {
                   {userMatchTips.filter(tip => !tip.tournamentMatchTip.locked).map(match => {
                     return (
                       <tr key={match.id}>
-                        <td className="text-xl font-semibold text-center py-3">{dayjs(match.tournamentMatchTip.date).fromNow()}</td>
-                        <td className="text-xl font-semibold text-center py-3">{match.tournamentMatchTip.homeTeam.name}</td>
-                        <td className="text-xl font-semibold text-center py-3">{match.homeScore}:{match.awayScore}</td>
-                        <td className="text-xl font-semibold text-center py-3">{match.tournamentMatchTip.awayTeam.name}</td>
-                        <td className="text-xl font-semibold py-3">
+                        <td className="text-center">{dayjs(match.tournamentMatchTip.date).fromNow()}</td>
+                        <td className="text-center">{match.tournamentMatchTip.homeTeam.name}</td>
+                        <td className="text-center">{match.homeScore}:{match.awayScore}</td>
+                        <td className="text-center">{match.tournamentMatchTip.awayTeam.name}</td>
+                        <td className="">
                           <Edit onClick={() => {
                             setEditedMatch({
                               date: dayjs(match.tournamentMatchTip.date).format("YYYY-MM-DDThh:mm"),
