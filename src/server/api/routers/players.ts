@@ -76,7 +76,7 @@ export const playersRouter = createTRPCRouter({
       const { tournamentId } = input;
       const scorers = await ctx.prisma.player.findFirst({
         where: {
-          id: ctx.auth.userId,
+          playerId: ctx.auth.userId,
           tournamentId: tournamentId
         },
         include: {

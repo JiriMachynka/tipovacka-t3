@@ -86,7 +86,6 @@ export const MyTips = ({ id }: { id: string }) => {
 
   const tournamentGroups = [...new Set(tournamentData?.teams.map((team: Team) => team.groupName))];
 
-  console.log(overallTipsData);
   return (
     <SingleTournamentLayout>
       <>
@@ -328,9 +327,7 @@ export const MyTips = ({ id }: { id: string }) => {
                   scorerSecondLastName: scorers?.scorerSecond?.lastName || ""
                 }}
                 onSubmit={(values) => {
-                  console.log(values);
                   const { scorerFirstFirstName, scorerFirstLastName, scorerSecondFirstName, scorerSecondLastName } = values;
-                  console.log(allScorers?.filter(scorer => scorer.firstName.includes(scorerFirstFirstName)));
                   updateScorers({
                     tournamentId: parseInt(id),
                     scorerFirstFirstName,

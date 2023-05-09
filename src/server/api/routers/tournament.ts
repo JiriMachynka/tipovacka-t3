@@ -219,7 +219,6 @@ export const tournamentRouter = createTRPCRouter({
 
       const allUsers = await clerkClient.users.getUserList();
       const playerData = _.groupBy(players.map(player => allUsers.filter(user => user.id === player.playerId)[0]), "id");
-      console.log(playerData);
       return players.map(player => {
         return {
           ...player,
