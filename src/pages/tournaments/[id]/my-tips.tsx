@@ -86,6 +86,7 @@ export const MyTips = ({ id }: { id: string }) => {
 
   const tournamentGroups = [...new Set(tournamentData?.teams.map((team: Team) => team.groupName))];
 
+  console.log(overallTipsData);
   return (
     <SingleTournamentLayout>
       <>

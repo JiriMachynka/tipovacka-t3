@@ -143,7 +143,7 @@ export const tournamentRouter = createTRPCRouter({
           players: true,
         }
       });
-      return allTournaments;
+      return allTournaments || [];
     }),
   getAllTournamentData: protectedProcedure
     .input(z.object({
