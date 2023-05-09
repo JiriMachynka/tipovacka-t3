@@ -202,10 +202,10 @@ export const MyTips = ({ id }: { id: string }) => {
             <AccordionContent>
               <Formik
                 initialValues={{
-                  winner: overallTipsData?.winner?.name || "",
-                  finalist: overallTipsData?.finalist?.name || "",
-                  semifinalistFirst: overallTipsData?.semifinalistFirst?.name || "",
-                  semifinalistSecond: overallTipsData?.semifinalistSecond?.name || ""
+                  winner: overallTipsData.winner?.name || "",
+                  finalist: overallTipsData.finalist?.name || "",
+                  semifinalistFirst: overallTipsData.semifinalistFirst?.name || "",
+                  semifinalistSecond: overallTipsData.semifinalistSecond?.name || ""
                 }}
                 onSubmit={(values) => {
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

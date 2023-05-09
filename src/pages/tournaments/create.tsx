@@ -34,7 +34,7 @@ const CreateTournamentPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-primary">
-      <Link href="/tournaments" className="w-fit mx-auto">
+      <Link href="/" className="w-fit mx-auto my-3">
         <Button>
           Zpět na tipovačky
         </Button>
