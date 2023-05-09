@@ -19,6 +19,6 @@ export type EditedScorer = {
 } | null;
 
 export type DeletedPlayer = {
-  id: string | null | undefined;
+  id: number;
   username: string | null | undefined;
 } | null;

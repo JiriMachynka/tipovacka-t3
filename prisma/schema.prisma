@@ -23,7 +23,8 @@ model Tournament {
 }
 
 model Player {
-    id                     String         @id
+    id                     Int            @id @default(autoincrement())
+    playerId               String
     tournamentId           Int
     tournament             Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
     tournamentOverallTipId Int?
@@ -33,7 +34,7 @@ model Player {
     scorerSecond           Scorer?        @relation(name: "scorerSecond", fields: [scorerSecondId], references: [id])
     matchTips              UserMatchTip[]
 
-    @@index([tournamentId, tournamentOverallTipId, scorerFirstId, scorerSecondId])
+    @@index([id, tournamentId, tournamentOverallTipId, scorerFirstId, scorerSecondId])
 }
 
 model Team {
@@ -71,7 +72,7 @@ model TournamentOverallTips {
 
 model UserMatchTip {
     id                   Int                @id @default(autoincrement())
-    playerId             String
+    playerId             Int
     player               Player             @relation(fields: [playerId], references: [id], onDelete: Cascade)
     tournamentMatchTipId Int
     tournamentMatchTip   TournamentMatchTip @relation(fields: [tournamentMatchTipId], references: [id], onDelete: Cascade)

@@ -62,7 +62,7 @@ export const MyTips = ({ id }: { id: string }) => {
 					<AlertDialogContent className="bg-primary">
 						<Formik
 							initialValues={{
-								id: deletedPlayer?.id as string,
+								id: deletedPlayer.id,
 								username: deletedPlayer?.username
 							}}
 							onSubmit={(values) => {

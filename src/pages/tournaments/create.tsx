@@ -20,7 +20,7 @@ const CreateTournamentPage = () => {
         title: "Vytvořeno",
         description: "Tipovačka byla úspěšně vytvořena",
       });
-      void router.push(`/tournaments/${data!.id}`);
+      void router.push(`/tournaments/${data!.toString()}`);
     },
     onError() {
       toast({
