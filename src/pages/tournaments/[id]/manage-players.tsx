@@ -128,16 +128,16 @@ export const MyTips = ({ id }: { id: string }) => {
 						</tr>
 					</thead>
 					<tbody>
-						{players?.map((player) => {
-							if (player?.id !== userId) {
+						{players?.map(player => {
+							if (player.playerId !== userId) {
 								return (
-									<tr key={player?.id}>
-										<td className="text-center">{player?.username}</td>
-										<td>{player?.emailAddresses[0]?.emailAddress}</td>
+									<tr key={player.id}>
+										<td className="text-center">{player.username}</td>
+										<td>{player.email}</td>
 										<td>
 											<Trash onClick={() => {
 												setDeletedPlayer({
-													id: player?.id,
+													id: player.id,
 													username: player?.username
 												})
 											}} 

@@ -1,4 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import _ from "lodash";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
@@ -211,13 +212,21 @@ export const tournamentRouter = createTRPCRouter({
           tournamentId,
         },
         select: {
+          id: true,
           playerId: true,
         }
       });
 
       const allUsers = await clerkClient.users.getUserList();
-      const playerData = players.map(player => allUsers.filter(user => user.id === player.playerId)[0]);
-      return playerData;
+      const playerData = _.groupBy(players.map(player => allUsers.filter(user => user.id === player.playerId)[0]), "id");
+      console.log(playerData);
+      return players.map(player => {
+        return {
+          ...player,
+          username: playerData[player.playerId]![0]!.username,
+          email: playerData[player.playerId]![0]!.emailAddresses[0]?.emailAddress,
+        }
+      });
     }),
   getTournamentOverallTips: protectedProcedure
     .input(z.object({
