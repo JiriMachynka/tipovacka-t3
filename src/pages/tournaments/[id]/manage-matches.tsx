@@ -14,55 +14,87 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { cn } from "@/lib/utils";
 import { type EditedMatch } from "@/types";
 import Loading from "@/components/Loading";
+import { useToast } from "@/components/ui/use-toast";
 dayjs.extend(relativeTime);
 
 export const ManageMatches = ({ id }: { id: string }) => {
   const { user } = useUser();
+  const { toast } = useToast(); 
   const [editedMatch, setEditedMatch] = useState<EditedMatch>(null);
   const utils = api.useContext();
   const { mutate: unlockMatch } = api.matches.unlockMatch.useMutation({
-    onSuccess: () => {
-      console.log("Match unlocked successfully");
-      void utils.matches.invalidate();
+    onSuccess() {
+      toast({
+        title: "Odemčen",
+        description: `Zápas byl úspěšně odemčen`,
+      });
+			void utils.matches.invalidate();
     },
-    onError: (error) => {
-      console.log(error);
+    onError() {
+      toast({
+        title: "Chyba",
+        description: `Nepodařilo se odemknout záps`,
+      });
     }
-  })
+  });
   const { mutate: lockMatch } = api.matches.lockMatch.useMutation({
-    onSuccess: () => {
-      console.log("Match locked successfully");
-      void utils.matches.invalidate();
+    onSuccess() {
+      toast({
+        title: "Uzamčeno",
+        description: `Zápas byl úspěšně uzamčen`,
+      });
+			void utils.matches.invalidate();
     },
-    onError: (error) => {
-      console.log(error);
+    onError() {
+      toast({
+        title: "Chyba",
+        description: `Nepodařilo se uzamknout záps`,
+      });
     }
-  })
+  });
   const { mutate: deleteMatch } = api.matches.deleteMatch.useMutation({
-    onSuccess: () => {
-      console.log("Match deleted successfully");
-      void utils.matches.invalidate();
+    onSuccess() {
+      toast({
+        title: "Odstraněn",
+        description: `Zápas byl úspěšně odstraněn`,
+      });
+			void utils.matches.invalidate();
     },
-    onError: (error) => {
-      console.log(error);
+    onError() {
+      toast({
+        title: "Chyba",
+        description: `Nepodařilo se odstranit záps`,
+      });
     }
   });
   const { mutate: updateMatch } = api.matches.updateMatch.useMutation({
-    onSuccess: () => {
-      console.log("Match edited successfully");
-      void utils.matches.invalidate();
+    onSuccess() {
+      toast({
+        title: "Aktualizováno",
+        description: `Zápas byl úspěšně aktualizován`,
+      });
+			void utils.matches.invalidate();
     },
-    onError: (error) => {
-      console.log(error);
+    onError() {
+      toast({
+        title: "Chyba",
+        description: `Nepodařilo se aktualizovat záps`,
+      });
     }
   });
   const { mutate: createMatch } = api.matches.createMatch.useMutation({
-    onSuccess: () => {
-      console.log("Match created successfully");
-      void utils.matches.invalidate();
+    onSuccess() {
+      toast({
+        title: "Vytvořeno",
+        description: `Zápas byl úspěšně vytvořen`,
+      });
+			void utils.matches.invalidate();
     },
-    onError: (error) => {
-      console.log(error);
+    onError() {
+      toast({
+        title: "Chyba",
+        description: `Nepodařilo se vytvořit záps`,
+      });
     }
   });
   const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: parseInt(id) });

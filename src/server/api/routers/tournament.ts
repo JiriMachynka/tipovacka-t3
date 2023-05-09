@@ -12,44 +12,80 @@ export const tournamentRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const { tournamentName, players, teams } = input;
-      const allPlayers = await clerkClient.users.getUserList();
-      const currentUsers = allPlayers.filter(player => players.includes(player.username as string));
-      const tournament = await ctx.prisma.tournament.create({
-        data: {
-          authorId: ctx.auth.userId,
-          name: tournamentName,
-          teams: {
-            createMany: {
-              data: teams.map((group, idx) => group.map(team => {
-                return {
-                  groupName: `Skupina ${String.fromCharCode(65 + idx)}`,
-                  name: team,
-                };
-              })).flatMap(group => group)
+      if (players.length === 1) {
+        const tournament = await ctx.prisma.tournament.create({
+          data: {
+            authorId: ctx.auth.userId,
+            name: tournamentName,
+            teams: {
+              createMany: {
+                data: teams.map((group, idx) => group.map(team => {
+                  return {
+                    groupName: `Skupina ${String.fromCharCode(65 + idx)}`,
+                    name: team,
+                  };
+                })).flatMap(group => group)
+              }
+            },
+            players: {
+              create: {
+                id: ctx.auth.userId,
+              }
             }
           },
-          players: {
-            createMany: {
-              data: currentUsers.map(player => {
-                return {
-                  id: player.id,
-                };
-              }),
-            }
+          include: {
+            players: true,
           }
-        },
-        include: {
-          players: true,
-        }
-      });
-      await ctx.prisma.tournamentOverallTips.createMany({
-        data: tournament.players.map((player: Player) => {
-          return {
-            playerId: player.id,
-            tournamentId: player.tournamentId,
-          };
-        }),
-      });
+        });
+        await ctx.prisma.tournamentOverallTips.create({
+          data: {
+            playerId: ctx.auth.userId,
+            tournamentId: tournament.id,
+          }
+        });
+        return tournament;
+      } else if (players.length > 1) {
+        const allPlayers = await clerkClient.users.getUserList();
+        const currentUsers = allPlayers.filter(player => players.includes(player.username as string));
+      
+        const tournament = await ctx.prisma.tournament.create({
+          data: {
+            authorId: ctx.auth.userId,
+            name: tournamentName,
+            teams: {
+              createMany: {
+                data: teams.map((group, idx) => group.map(team => {
+                  return {
+                    groupName: `Skupina ${String.fromCharCode(65 + idx)}`,
+                    name: team,
+                  };
+                })).flatMap(group => group)
+              }
+            },
+            players: {
+              createMany: {
+                data: currentUsers.map(player => {
+                  return {
+                    id: player.id,
+                  };
+                }),
+              }
+            }
+          },
+          include: {
+            players: true,
+          }
+        });
+
+        await ctx.prisma.tournamentOverallTips.createMany({
+          data: tournament.players.map((player: Player) => {
+            return {
+              playerId: player.id,
+              tournamentId: player.tournamentId,
+            };
+          })
+        });
+      }
     }),
   addPlayer: protectedProcedure
     .input(z.object({

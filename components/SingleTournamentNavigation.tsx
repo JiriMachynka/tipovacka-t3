@@ -44,7 +44,7 @@ const SingleTournamentNavigation = () => {
                 "hidden": !mobileNav,
                 "block": mobileNav
               })}>
-                <Link href="/tournaments" legacyBehavior passHref >
+                <Link href="/" legacyBehavior passHref >
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Zpět na tipovačky
                   </NavigationMenuLink>

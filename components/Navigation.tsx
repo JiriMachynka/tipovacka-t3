@@ -23,7 +23,7 @@ const Navigation = () => {
         {user.isSignedIn &&
           <>
             <NavigationMenuItem>
-              <Link href="/tournaments" legacyBehavior passHref>
+              <Link href="/" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Tipovačky
                 </NavigationMenuLink>
