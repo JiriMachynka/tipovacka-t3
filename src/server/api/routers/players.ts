@@ -15,6 +15,11 @@ export const playersRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const { tournamentId, scorerFirstFirstName, scorerFirstLastName, scorerSecondFirstName, scorerSecondLastName } = input;
+      const currentPlayer = await ctx.prisma.player.findFirst({
+        where: {
+          playerId: ctx.auth.userId,
+        }
+      });
       const scorerFirstFound = await ctx.prisma.scorer.findFirst({
         where: {
           firstName: scorerFirstFirstName,
@@ -60,7 +65,7 @@ export const playersRouter = createTRPCRouter({
 
       await ctx.prisma.player.update({
         where: {
-          id: ctx.auth.userId
+          id: currentPlayer!.id,
         },
         data: {
           scorerFirstId: scorerFirst.id,
@@ -100,21 +105,29 @@ export const playersRouter = createTRPCRouter({
           matchTips: true,
         },
       });
-      const leaderboardData = _.groupBy(leaderboard.map(user => user.matchTips).flat(), "playerId");
-      const users = await clerkClient.users.getUserList();
-      return _.sortBy(Object.keys(leaderboardData).map(playerId => {
-        return leaderboardData[playerId]?.reduce((prev, curr) => {
-          return {
-            ...curr,
-            points: (prev.points || 0) + (curr.points || 0),
+      if (leaderboard[0]?.matchTips.length) {
+        const leaderboardData = _.groupBy(leaderboard.map(user => user.matchTips).flat(), "playerId");
+        const users = await clerkClient.users.getUserList();
+        const tournamentPlayers = await ctx.prisma.player.findMany({
+          where: {
+            tournamentId,
           }
         });
-      }).map(matchTip => {
-        const user = users.find(user => user.id === matchTip?.playerId);
-        return {
-          ...matchTip,
-          username: user!.username,
-        }
-      }), ["points"]).reverse();
+        return _.sortBy(Object.keys(leaderboardData).map(playerId => {
+          return leaderboardData[playerId]?.reduce((prev, curr) => {
+            return {
+              ...curr,
+              points: (prev.points || 0) + (curr.points || 0),
+            }
+          });
+        }).map(matchTip => {
+          const user = users.find(user => user?.id === tournamentPlayers.find(player => player?.id === matchTip?.playerId)?.playerId);
+          return {
+            ...matchTip,
+            username: user!.username,
+          }
+        }), ["points"]).reverse();
+      }
+      return 
     }),
 });
