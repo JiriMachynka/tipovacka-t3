@@ -9,7 +9,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils";
-import { useAuth, SignInButton, SignOutButton } from "@clerk/nextjs"
+import { useAuth, SignInButton, useClerk } from "@clerk/nextjs"
 import { LogOut, X } from "lucide-react";
 import Link from "next/link"
 import { useRouter } from "next/router";
@@ -22,6 +22,7 @@ const SingleTournamentNavigation = () => {
   const [mobileNav, setMobileNav] = useState<boolean>(false);
   const router = useRouter();
   const user = useAuth();
+  const { signOut } = useClerk();
   const { data: tournamentData } = api.tournament.getAllTournamentData.useQuery({ tournamentId: parseInt(router.query.id as string) });
 
   useEffect(() => {
@@ -32,119 +33,115 @@ const SingleTournamentNavigation = () => {
     <>
       <NavigationMenu className={cn("lg:relative lg:flex lg:flex-row", {
         "hidden": !mobileNav,
-        "absolute left-0 top-0 mt-10 w-full h-[100vh] flex flex-col bg-primary": mobileNav,
+        "absolute left-0 top-0 pt-20 w-full flex flex-col bg-primary": mobileNav,
         "my-auto": !user.isSignedIn,
       })}>
         <NavigationMenuList className={cn("lg:left-0 lg:top-0 lg:flex-row lg:gap-0", {
           "flex-col gap-5": mobileNav
         })}>
-          {user.isSignedIn &&
-            <>
-              <NavigationMenuItem className={cn("lg:block", {
-                "hidden": !mobileNav,
-                "block": mobileNav
-              })}>
-                <Link href="/" legacyBehavior passHref >
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Zpět na tipovačky
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem className={cn("lg:block", {
-                "hidden": !mobileNav,
-                "block": mobileNav
-              })}>
-                <Link href={`/tournaments/${router.query.id as string}/`} legacyBehavior passHref >
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Tabulka
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem className={cn("lg:block", {
-                "hidden": !mobileNav,
-                "block": mobileNav
-              })}>
-                <Link href={`/tournaments/${router.query.id as string}/my-tips`} legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Moje tipy
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem className={cn("lg:block", {
-                "hidden": !mobileNav,
-                "block": mobileNav
-              })}>
-                <Link href={`/tournaments/${router.query.id as string}/leaderboard`} legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Žebříček
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              {(tournamentData?.authorId === user.userId) && (<>
-                <NavigationMenuItem className={cn("hidden lg:inline-flex")}>
-                  <NavigationMenuTrigger>Admin sekce</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="flex flex-col w-[300px] bg-primary">
-                      <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-matches`} title="Spravovat zápasy" />
-                      <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-scorers`} title="Spravovat střelce" />
-                      <ListItem className="!rounded-none" href={`/tournaments/${router.query.id as string}/manage-players`} title="Spravovat hráče" />
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </>)}
-            </>
-          }
-          <NavigationMenuItem className={cn("lg:hidden", {
-            "hidden": !mobileNav,
-            "block": mobileNav
-          })}>
-            <Link href={`/tournaments/${router.query.id as string}/manage-matches`} legacyBehavior passHref >
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Spravovat zápasy
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem className={cn("lg:hidden", {
-            "hidden": !mobileNav,
-            "block": mobileNav
-          })}>
-            <Link href={`/tournaments/${router.query.id as string}/manage-scorers`} legacyBehavior passHref >
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Spravovat střelce
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem className={cn("lg:hidden", {
-            "hidden": !mobileNav,
-            "block": mobileNav
-          })}>
-            <Link href={`/tournaments/${router.query.id as string}/manage-players`} legacyBehavior passHref >
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Spravovat hráče
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem className={cn("lg:block", {
-            "hidden": !mobileNav,
-            "block": mobileNav
-          })}>
-            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "cursor-pointer", {
-              "py-10": !user.isSignedIn,
+          {user.isSignedIn && (<>
+            <NavigationMenuItem className={cn("lg:block", {
+              "hidden": !mobileNav,
+              "block": mobileNav
             })}>
-              {user.isSignedIn ? 
-                <SignOutButton>
-                  <button onClick={() => void router.push("/")}>
+              <Link href="/" legacyBehavior passHref >
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                Zpět na tipovačky
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem className={cn("lg:block", {
+              "hidden": !mobileNav,
+              "block": mobileNav
+            })}>
+              <Link href={`/tournaments/${router.query.id as string}/`} legacyBehavior passHref >
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  Tabulka
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem className={cn("lg:block", {
+              "hidden": !mobileNav,
+              "block": mobileNav
+            })}>
+              <Link href={`/tournaments/${router.query.id as string}/my-tips`} legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  Moje tipy
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem className={cn("lg:block", {
+              "hidden": !mobileNav,
+              "block": mobileNav
+            })}>
+              <Link href={`/tournaments/${router.query.id as string}/leaderboard`} legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  Žebříček
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            {(tournamentData?.authorId === user.userId) && (<>
+              <NavigationMenuItem className={cn("hidden lg:inline-flex")}>
+                <NavigationMenuTrigger>Admin sekce</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="flex flex-col w-[300px] bg-primary">
+                    <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-matches`} title="Spravovat zápasy" />
+                    <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-scorers`} title="Spravovat střelce" />
+                    <ListItem className="!rounded-none" href={`/tournaments/${router.query.id as string}/manage-players`} title="Spravovat hráče" />
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              <NavigationMenuItem className={cn("lg:hidden", {
+                "hidden": !mobileNav,
+                "block": mobileNav
+              })}>
+                <Link href={`/tournaments/${router.query.id as string}/manage-matches`} legacyBehavior passHref >
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Spravovat zápasy
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem className={cn("lg:hidden", {
+                "hidden": !mobileNav,
+                "block": mobileNav
+              })}>
+                <Link href={`/tournaments/${router.query.id as string}/manage-scorers`} legacyBehavior passHref >
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Spravovat střelce
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem className={cn("lg:hidden", {
+                "hidden": !mobileNav,
+                "block": mobileNav
+              })}>
+                <Link href={`/tournaments/${router.query.id as string}/manage-players`} legacyBehavior passHref >
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Spravovat hráče
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </>)}
+            <NavigationMenuItem className={cn("lg:block", {
+              "hidden": !mobileNav,
+              "block": mobileNav
+            })}>
+              <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "cursor-pointer", {
+                "py-10": !user.isSignedIn,
+              })}>
+                {user.isSignedIn ? 
+                  <button onClick={() => signOut()}>
                     <span className="block lg:hidden">Odhlásit se</span>
                     <LogOut className="hidden lg:block" />
                   </button>
-                </SignOutButton> 
-                : 
-                <SignInButton>
-                  <button className="text-5xl uppercase">Přihlásit se</button>
-                </SignInButton>
-              }
-            </NavigationMenuLink>
-          </NavigationMenuItem>
+                  : 
+                  <SignInButton>
+                    <button className="text-5xl uppercase">Přihlásit se</button>
+                  </SignInButton>
+                }
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+        </>)}
         </NavigationMenuList>
       </NavigationMenu>
       <div className={cn("items-center w-full", {
