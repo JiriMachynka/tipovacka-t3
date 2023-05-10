@@ -2,7 +2,6 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import _ from "lodash";
 import { clerkClient } from "@clerk/nextjs/server";
-import { UserMatchTip } from "@prisma/client";
 
 export const playersRouter = createTRPCRouter({
   createScorer: protectedProcedure

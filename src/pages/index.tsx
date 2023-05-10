@@ -4,24 +4,15 @@ import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Link from "next/link";
 import Loading from "@/components/Loading";
-import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
 
 const Home = () => {
-	const session = useAuth();
-	const router = useRouter();
 	const { isLoading, data: allTournaments } = api.tournament.getAllTournaments.useQuery();
-
-	useEffect(() => {
-		if (!session.userId) void router.push("/"); 
-	}, []);
 
 	return (
 		<>
 			<main className="flex flex-col min-h-screen bg-primary">
 				<Navigation />
-				{isLoading ? <Loading /> : ( 
+				{isLoading ? <Loading /> :  (
 				<>
 					<section className="w-full lg:max-w-screen-lg lg:mx-auto">
 						{allTournaments?.map((tournament) => (

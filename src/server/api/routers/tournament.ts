@@ -140,10 +140,8 @@ export const tournamentRouter = createTRPCRouter({
             }
           ]
         },
-        include: {
-          players: true,
-        }
       });
+      console.log(allTournaments);
       return allTournaments;
     }),
   getAllTournamentData: protectedProcedure

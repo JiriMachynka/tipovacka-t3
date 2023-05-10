@@ -32,9 +32,8 @@ export const MyTips = ({ id }: { id: string }) => {
   const { data: groups } = api.teams.getGroups.useQuery({ tournamentId: parseInt(id) });
   const { data: sortedTeams } = api.teams.getSortedTeams.useQuery({ tournamentId: parseInt(id) })
   const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: parseInt(id) });
-  const { data: userMatchTips } = api.matches.getPlayerMatches.useQuery();
+  const { data: userMatchTips } = api.matches.getPlayerMatches.useQuery({ tournamentId: parseInt(id) });
   const { data: scorers } = api.players.getPlayerScorers.useQuery({ tournamentId: parseInt(id) });
-  const { data: allScorers } = api.tournament.getScorers.useQuery({ tournamentId: parseInt(id) });
 
   const { mutate: updateMyTips } = api.tournament.updateTournamentOverallTips.useMutation({
     onSuccess() {
@@ -372,7 +371,7 @@ export const MyTips = ({ id }: { id: string }) => {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-        {userMatchTips.filter(matchTip => !matchTip.tournamentMatchTip.locked).length > 0 && (
+        {userMatchTips.length > 0 && (
         <Accordion type="single" collapsible={myTipsOpened} className="w-full lg:w-1/2 lg:mx-auto" onClick={() => setMyTipsOpened(!myTipsOpened)}>
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-2xl uppercase">Zápasy</AccordionTrigger>
@@ -388,7 +387,7 @@ export const MyTips = ({ id }: { id: string }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {userMatchTips.filter(tip => !tip.tournamentMatchTip.locked).map(match => {
+                  {userMatchTips.map(match => {
                     return (
                       <tr key={match.id}>
                         <td className="text-center">{dayjs(match.tournamentMatchTip.date).fromNow()}</td>

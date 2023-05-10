@@ -58,15 +58,24 @@ export const matchesRouter = createTRPCRouter({
     }
   ),
   getPlayerMatches: protectedProcedure
-    .query(async ({ ctx }) => {
+    .input(z.object({
+      tournamentId: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { tournamentId } = input;
       const currentPlayer = await ctx.prisma.player.findFirst({
         where: {
           playerId: ctx.auth.userId,
+          tournamentId,
         }
       });
+
       const matches = await ctx.prisma.userMatchTip.findMany({
         where: {
-          id: currentPlayer!.id,
+          playerId: currentPlayer?.id,
+          tournamentMatchTip: {
+            locked: false,
+          }
         },
         orderBy: {
           tournamentMatchTip: {
