@@ -108,11 +108,11 @@ export const MyTips = ({ id }: { id: string }) => {
 					}}
 				>
 					{props => (
-						<form onSubmit={props.handleSubmit} className="w-full lg:w-1/2 lg:mx-auto">
+						<form onSubmit={props.handleSubmit} className="flex mx-auto justify-center w-full lg:w-3/4">
 							<div className="flex flex-col gap-3">
 								<Label htmlFor="username" >Přezdívka hráče</Label>
-								<div className="flex gap-3">
-									<Input id="username" name="username" autoComplete="off" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.username} className="w-fit lg:w-[70%]" type="text" />
+								<div className="grid grid-cols-[1fr_auto] gap-3">
+									<Input id="username" name="username" autoComplete="off" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.username} type="text" />
 									<Button type="submit">Přidat hráče</Button>
 								</div>
 							</div>
