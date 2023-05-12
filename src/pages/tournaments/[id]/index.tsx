@@ -54,7 +54,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
               <span className="flex justify-center w-full p-2 lg:p-0 border-b border-b-slate-50 lg:border-none"><Swords /></span>
             </div>
             {tournamentData?.players?.map(player => (
-              <div key={player.id} className="px-3 py-2 text-xl [&:not(:last-child)]:border-b border-slate-50">
+              <div key={player.playerId} className="px-3 py-2 text-xl [&:not(:last-child)]:border-b border-slate-50">
                 {player.username}
               </div>
             ))}
