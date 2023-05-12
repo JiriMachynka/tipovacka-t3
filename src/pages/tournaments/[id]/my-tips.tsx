@@ -307,7 +307,7 @@ export const MyTips = ({ id }: { id: string }) => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button type="submit">Uložit tipy</Button>
+                    <Button type="submit" disabled>Uložit tipy</Button>
                   </form>
                 )}
               </Formik>
@@ -364,7 +364,7 @@ export const MyTips = ({ id }: { id: string }) => {
                         </div>
                       </div>
                     </div>
-                    <Button type="submit">Uložit střelce</Button>
+                    <Button type="submit" disabled>Uložit střelce</Button>
                   </form>
                 )}
               </Formik>
