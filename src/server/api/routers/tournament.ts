@@ -152,7 +152,7 @@ export const tournamentRouter = createTRPCRouter({
       const { tournamentId } = input;
       const tournamentData = await ctx.prisma.tournament.findFirst({
         where: {
-          id: tournamentId
+          id: tournamentId,
         },
         include: {
           teams: true,
@@ -166,12 +166,16 @@ export const tournamentRouter = createTRPCRouter({
               awayTeam: true,
             }
           },
-          players: true,
+          players: {
+            select: {
+              playerId: true,
+            }
+          },
         }
       });
-      const usernames = await clerkClient.users.getUserList();
+      const users = await clerkClient.users.getUserList();
       const playerArr = tournamentData?.players.map(player => {
-        const username = usernames.find(username => username.id === player.playerId)?.username;
+        const username = users.filter(user => user.id === player.playerId)[0]?.username;
         return {
           ...player,
           username
