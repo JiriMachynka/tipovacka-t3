@@ -175,16 +175,13 @@ export const tournamentRouter = createTRPCRouter({
         }
       });
       const users = await clerkClient.users.getUserList();
-      console.log(users);        
-      const playerArr = tournamentData?.players.map(async player => {
-        // const user = users.find(user => user.id === player.playerId);
-        const username = (await clerkClient.users.getUser(player.playerId)).username;
+      const playerArr = tournamentData?.players.map(player => {
+        const username = users.find(user => user.id === player.playerId)?.username;
         return {
           ...player,
           username,
         }
       });
-      console.log(playerArr);
       return {
         ...tournamentData, 
         players: playerArr,
