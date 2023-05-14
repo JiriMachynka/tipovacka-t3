@@ -3,10 +3,12 @@ import { type GetServerSidePropsContext } from "next";
 import { api } from "~/utils/api";
 import { Download, Swords, Users } from "lucide-react";
 import Loading from "@/components/Loading";
+
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocale from "dayjs/plugin/updateLocale";
 import "dayjs/locale/cs";
+import { players } from "~/data/players";
 dayjs.locale("cs");
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocale);
@@ -53,11 +55,16 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
               <span className="hidden lg:inline">/</span>
               <span className="flex justify-center w-full p-2 lg:p-0 border-b border-b-slate-50 lg:border-none"><Swords /></span>
             </div>
-            {tournamentData?.players?.map(player => (
+            {players?.map(player => (
+              <div key={player} className="px-3 py-2 text-xl [&:not(:last-child)]:border-b border-slate-50">
+                {player}
+              </div>
+            ))}
+            {/* {tournamentData?.players?.map(player => (
               <div key={player.playerId} className="px-3 py-2 text-xl [&:not(:last-child)]:border-b border-slate-50">
                 {player.username}
               </div>
-            ))}
+            ))} */}
           </div>
           <div className="flex border border-slate-50 overflow-x-auto custom-scrollbar">
             {tournamentData?.tournamentMatchTips?.map(matchTip => (
