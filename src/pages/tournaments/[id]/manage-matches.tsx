@@ -254,7 +254,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
                     value={props.values.date}
                     onChange={props.handleChange}
                   />
-                  <Select name="group" onValueChange={(value) => props.setFieldValue("group", value)}>
+                  {/* <Select name="group" onValueChange={(value) => props.setFieldValue("group", value)}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Zvol skupinu" />
                     </SelectTrigger>
@@ -263,7 +263,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
                         <SelectItem key={group} value={group}>{group}</SelectItem>
                       ))}
                     </SelectContent>
-                  </Select>
+                  </Select> */}
                 </div>
                 <div className="flex flex-col gap-5">
                   <div className="flex gap-5">
@@ -272,7 +272,10 @@ export const ManageMatches = ({ id }: { id: string }) => {
                         <SelectValue placeholder="Zvol domácí tým" />
                       </SelectTrigger>
                       <SelectContent>
-                        {tournamentData?.teams.filter(team => team.groupName === props.values.group).map(team => (
+                        {/* {tournamentData?.teams.filter(team => team.groupName === props.values.group).map(team => (
+                          <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                        ))} */}
+                        {tournamentData?.teams.map(team => (
                           <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
                         ))}
                       </SelectContent>
@@ -282,7 +285,10 @@ export const ManageMatches = ({ id }: { id: string }) => {
                         <SelectValue placeholder="Zvol hostující tým" />
                       </SelectTrigger>
                       <SelectContent>
-                        {tournamentData?.teams.filter(team => team.groupName === props.values.group && team.name !== props.values.homeTeam).map(team => (
+                        {/* {tournamentData?.teams.filter(team => team.groupName === props.values.group && team.name !== props.values.homeTeam).map(team => (
+                          <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                        ))} */}
+                        {tournamentData?.teams.filter(team => team.name !== props.values.homeTeam).map(team => (
                           <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
                         ))}
                       </SelectContent>
