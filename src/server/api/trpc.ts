@@ -18,13 +18,7 @@
  */
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { getAuth } from "@clerk/nextjs/server";
-import type { SignedInAuthObject,SignedOutAuthObject } from "@clerk/nextjs/api";
-
-import { prisma } from "../db";
-
-interface AuthContext {
-  auth: SignedInAuthObject | SignedOutAuthObject;
-}
+import { db } from "@/db/db";
 /**
  * This helper generates the "internals" for a tRPC context. If you need to use
  * it, you can export it from here
@@ -34,12 +28,6 @@ interface AuthContext {
  * - trpc's `createSSGHelpers` where we don't have req/res
  * @see https://create.t3.gg/en/usage/trpc#-servertrpccontextts
  */
-const createInnerTRPCContext = ({ auth }: AuthContext  ) => {
-  return {
-    auth,
-    prisma,
-  };
-};
 
 /**
  * This is the actual context you'll use in your router. It will be used to
@@ -47,7 +35,15 @@ const createInnerTRPCContext = ({ auth }: AuthContext  ) => {
  * @link https://trpc.io/docs/context
  */
 export const createTRPCContext = (opts: CreateNextContextOptions) => {
-  return createInnerTRPCContext({ auth: getAuth(opts.req) });
+  const { req } = opts;
+  const sesh = getAuth(req);
+
+  const userId = sesh.userId;
+
+  return {
+    db,
+    userId,
+  };
 };
 
 /**
@@ -58,26 +54,22 @@ export const createTRPCContext = (opts: CreateNextContextOptions) => {
  */
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { ZodError } from "zod";
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter({ shape }) {
-    return shape;
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
   },
 });
 
-// check if the user is signed in, otherwise through a UNAUTHORIZED CODE
-const isAuthed = t.middleware(({ next, ctx }) => {
-  if (!ctx.auth.userId) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
-
-  return next({
-    ctx: {
-      auth: ctx.auth,
-    },
-  });
-});
 /**
  * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)
  *
@@ -99,4 +91,19 @@ export const createTRPCRouter = t.router;
  * can still access user session data if they are logged in
  */
 export const publicProcedure = t.procedure;
+
+const isAuthed = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  return next({
+    ctx: {
+      userId: ctx.userId,
+    },
+  });
+});
+
 export const protectedProcedure = t.procedure.use(isAuthed);

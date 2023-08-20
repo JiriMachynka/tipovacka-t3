@@ -1,5 +1,6 @@
 import { z } from "zod";
-
+import { Teams } from "@/db/schema";
+import { asc, eq } from "drizzle-orm";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const teamsRouter = createTRPCRouter({
@@ -9,18 +10,15 @@ export const teamsRouter = createTRPCRouter({
   }))
   .query(async ({ ctx, input }) => {
     const { tournamentId } = input;
-    const teams = await ctx.prisma.team.findMany({
-      where: {
-        tournamentId,
-      },
-      orderBy: {
-        groupName: "asc",
-      },
-      select: {
-        groupName: true,
-      },
-      distinct: ["groupName"]
-    })
+    const teams = await ctx.db
+      .select({
+        name: Teams.groupName,
+      })
+      .from(Teams)
+      .where(eq(Teams.tournamentId, tournamentId))
+      .orderBy(asc(Teams.groupName))
+      .groupBy(Teams.groupName);
+
     return teams;
   }),
   getSortedTeams: publicProcedure
@@ -29,14 +27,17 @@ export const teamsRouter = createTRPCRouter({
     }))
     .query(async ({ ctx, input }) => {
       const { tournamentId } = input;
-      const teams = await ctx.prisma.team.findMany({
-        where: {
-          tournamentId,
-        },
-        orderBy: {
-          groupName: "asc",
-        },
-      })
+
+      const teams = await ctx.db
+        .select({
+          id: Teams.id,
+          name: Teams.name,
+          groupName: Teams.groupName,
+        })
+        .from(Teams)
+        .where(eq(Teams.tournamentId, tournamentId))
+        .orderBy(asc(Teams.groupName));
+
       return teams;
     }),
 });

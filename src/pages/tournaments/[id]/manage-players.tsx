@@ -9,11 +9,12 @@ import { type DeletedPlayer } from "@/types";
 import { useAuth } from "@clerk/nextjs";
 import { Formik } from "formik";
 import { Trash } from "lucide-react";
-import { type GetServerSidePropsContext } from "next";
+import type { GetStaticProps } from "next";
 import { useState } from "react";
+import { generateSSGHelper } from "~/server/helpers/ssgHelper";
 import { api } from "~/utils/api";
 
-export const MyTips = ({ id }: { id: string }) => {
+export default function ManagePlayers({ id }: { id: string }) {
 	const { toast } = useToast();
 	const { userId } = useAuth();
 	const [deletedPlayer, setDeletedPlayer] = useState<DeletedPlayer>(null);
@@ -21,17 +22,26 @@ export const MyTips = ({ id }: { id: string }) => {
 	const { isLoading, data: players } = api.tournament.getTournamentPlayers.useQuery({ tournamentId: parseInt(id) });
 
 	const { mutate: addPlayer } = api.tournament.addPlayer.useMutation({
-		onSuccess(data) {
-      toast({
-        title: "Přidán",
-        description: `Uživatel ${data} byl přidán do tipovačky`,
-      });
-			void utils.tournament.invalidate();
+		onSuccess(username) {
+			if (username) {
+				toast({
+					title: "Přidán",
+					description: `Uživatel ${username} byl přidán do tipovačky`,
+				});
+				void utils.tournament.invalidate();
+			} else {
+				toast({
+					title: "Chyba",
+					description: "Uživatel nenalezen",
+					variant: "destructive",
+				});
+			}
     },
     onError() {
       toast({
         title: "Chyba",
-        description: `Nepodařilo se přidat uživatele`,
+        description: "Nepodařilo se přidat uživatele",
+				variant: "destructive",
       });
     }
 	});
@@ -110,7 +120,7 @@ export const MyTips = ({ id }: { id: string }) => {
 					{props => (
 						<form onSubmit={props.handleSubmit} className="flex mx-auto justify-center w-full lg:w-3/4">
 							<div className="flex flex-col gap-3">
-								<Label htmlFor="username" >Přezdívka hráče</Label>
+								<Label htmlFor="username">Přezdívka hráče</Label>
 								<div className="grid grid-cols-[1fr_auto] gap-3">
 									<Input id="username" name="username" autoComplete="off" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.username} type="text" />
 									<Button type="submit">Přidat hráče</Button>
@@ -135,13 +145,16 @@ export const MyTips = ({ id }: { id: string }) => {
 										<td className="text-center">{player.username}</td>
 										<td>{player.email}</td>
 										<td>
-											<Trash onClick={() => {
-												setDeletedPlayer({
-													id: player.id,
-													username: player?.username
-												})
-											}} 
-												className="mx-auto cursor-pointer" size={20} />
+											<Trash 
+												className="mx-auto cursor-pointer" 
+												size={20} 
+												onClick={() => {
+													setDeletedPlayer({
+														id: player.id,
+														username: player?.username
+													})
+												}} 
+											/>
 										</td>
 									</tr>
 								)
@@ -155,12 +168,26 @@ export const MyTips = ({ id }: { id: string }) => {
 	)
 }
 
-export const getServerSideProps = (context: GetServerSidePropsContext) => {
-	return {
-		props: {
-			id: context.query.id
-		}
-	}
-};
+export const getStaticProps: GetStaticProps = async (context) => {
+  const ssg = generateSSGHelper();
 
-export default MyTips;
+  const id = context.params?.id;
+
+  if (typeof id !== "string") throw new Error("No id");
+
+  await ssg.tournament.getTournamentPlayers.prefetch({ tournamentId: parseInt(id) });
+
+  return {
+    props: {
+      trpcState: ssg.dehydrate(),
+      id,
+    },
+  };
+}
+
+export const getStaticPaths = () => {
+  return { 
+    paths: [], 
+    fallback: false 
+  }
+}

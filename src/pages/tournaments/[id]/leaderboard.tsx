@@ -1,10 +1,10 @@
 import Loading from "@/components/Loading";
 import SingleTournamentLayout from "@/components/SingleTournamentLayout";
-import { cn } from "@/lib/utils";
-import { type GetServerSidePropsContext } from "next";
+import type { GetStaticProps } from "next";
+import { generateSSGHelper } from "~/server/helpers/ssgHelper";
 import { api } from "~/utils/api";
 
-const Leaderboard = ({ id }: { id: string }) => {
+export default function Leaderboard({ id }: { id: string }) {
   const { isLoading, data: leaderboard } = api.players.getLeaderboardData.useQuery({ tournamentId: parseInt(id) });
 
   return (
@@ -20,17 +20,13 @@ const Leaderboard = ({ id }: { id: string }) => {
             </tr>
           </thead>
           <tbody>
-          {leaderboard?.map((playerData, idx) => {
-            if (idx < 3) {
-              return (
-                <tr key={playerData.username}>
-                  <td className="w-[40px] text-center">{idx + 1}</td>
-                  <td>{playerData.username}</td>
-                  <td className="w-[100px] text-center">{playerData.points}</td>
-                </tr>
-              )
-            }
-          })}
+          {leaderboard?.map(({ username, points }, idx) => (
+            <tr key={username}>
+              <td className="w-[40px] text-center">{idx + 1}</td>
+              <td>{username}</td>
+              <td className="w-[100px] text-center">{points || 0}</td>
+            </tr>
+          ))}
           </tbody>
         </table>
       )}
@@ -39,12 +35,26 @@ const Leaderboard = ({ id }: { id: string }) => {
   )
 }
 
-export const getServerSideProps = (context: GetServerSidePropsContext) => {
+export const getStaticProps: GetStaticProps = async (context) => {
+  const ssg = generateSSGHelper();
+
+  const id = context.params?.id;
+
+  if (typeof id !== "string") throw new Error("No id");
+
+  await ssg.players.getLeaderboardData.prefetch({ tournamentId: parseInt(id) });
+
   return {
     props: {
-      id: context.query.id
-    }
-  }
-};
+      trpcState: ssg.dehydrate(),
+      id,
+    },
+  };
+}
 
-export default Leaderboard
+export const getStaticPaths = () => {
+  return { 
+    paths: [], 
+    fallback: false 
+  }
+}

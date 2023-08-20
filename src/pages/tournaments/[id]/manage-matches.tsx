@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
 import { Formik } from "formik";
-import { type GetServerSidePropsContext } from "next";
 import { Trash, Edit, Lock, Unlock } from "lucide-react";
 import { api } from "~/utils/api";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -15,13 +14,20 @@ import { cn } from "@/lib/utils";
 import { type EditedMatch } from "@/types";
 import Loading from "@/components/Loading";
 import { useToast } from "@/components/ui/use-toast";
+import type { GetStaticProps } from "next";
+import { generateSSGHelper } from "~/server/helpers/ssgHelper";
 dayjs.extend(relativeTime);
 
-export const ManageMatches = ({ id }: { id: string }) => {
+export default function ManageMatches({ id }: { id: string }) {
   const { user } = useUser();
   const { toast } = useToast(); 
   const [editedMatch, setEditedMatch] = useState<EditedMatch>(null);
   const utils = api.useContext();
+
+  const { data: teams } = api.teams.getSortedTeams.useQuery({ tournamentId: parseInt(id) });
+  const { data: groups } = api.teams.getGroups.useQuery({ tournamentId: parseInt(id) });
+  const { isLoading, data: matches } = api.matches.getMatches.useQuery({ tournamentId: parseInt(id) });
+
   const { mutate: unlockMatch } = api.matches.unlockMatch.useMutation({
     onSuccess() {
       toast({
@@ -34,6 +40,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
       toast({
         title: "Chyba",
         description: `Nepodařilo se odemknout záps`,
+        variant: "destructive"
       });
     }
   });
@@ -97,12 +104,8 @@ export const ManageMatches = ({ id }: { id: string }) => {
       });
     }
   });
-  const { data: tournamentData } = api.tournament.getTournamentById.useQuery({ tournamentId: parseInt(id) });
-  const { isLoading, data: matches } = api.matches.getMatches.useQuery({ tournamentId: parseInt(id) });
 
-  if (!user?.username) return null
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  const tournamentGroups = [...new Set(tournamentData?.teams.map(team => team.groupName))];
+  if (!teams || !groups || !user?.username) return null
 
   return (
     <SingleTournamentLayout>
@@ -116,19 +119,20 @@ export const ManageMatches = ({ id }: { id: string }) => {
                   date: dayjs(editedMatch.date).format("YYYY-MM-DDThh:mm"),
                   matchId: editedMatch.matchId,
                   group: editedMatch.group,
-                  homeTeam: editedMatch.homeTeam,
-                  awayTeam: editedMatch.awayTeam,
+                  homeTeamId: editedMatch.homeTeamId,
+                  homeTeamName: editedMatch.homeTeamName,
+                  awayTeamId: editedMatch.awayTeamId,
+                  awayTeamName: editedMatch.awayTeamName,
                   homeScore: editedMatch.homeScore,
                   awayScore: editedMatch.awayScore
                 }}
                 onSubmit={(values) => {
                   const parsedDate = new Date(values.date);
                   updateMatch({
-                    tournamentId: parseInt(id),
                     matchId: values.matchId,
                     date: parsedDate,
-                    homeTeam: values.homeTeam,
-                    awayTeam: values.awayTeam,
+                    homeTeamId: values.homeTeamId,
+                    awayTeamId: values.awayTeamId,
                     homeScore: values.homeScore,
                     awayScore: values.awayScore
                   });
@@ -154,31 +158,31 @@ export const ManageMatches = ({ id }: { id: string }) => {
                                 <SelectValue placeholder="Zvol skupinu" />
                               </SelectTrigger>
                               <SelectContent>
-                                {tournamentGroups.map((group: string) => (
-                                  <SelectItem key={group} value={group}>{group}</SelectItem>
+                                {groups.map(group => (
+                                  <SelectItem key={group.name} value={group.name}>{group.name}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           </div>
                           <div className="flex gap-5">
                             <div className="flex gap-5 w-full">
-                              <Select name="homeTeam" value={props.values.homeTeam} onValueChange={(value) => props.setFieldValue("homeTeam", value)}>
-                                <SelectTrigger value={props.values.homeTeam}>
+                              <Select name="homeTeam" value={props.values.homeTeamName} onValueChange={(value) => props.setFieldValue("homeTeam", value)}>
+                                <SelectTrigger value={props.values.homeTeamName}>
                                   <SelectValue placeholder="Zvol domácí tým" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {tournamentData?.teams.filter(team => team.groupName === props.values.group).map(team => (
-                                    <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                                  {teams.filter(team => team.groupName === props.values.group).map(team => (
+                                    <SelectItem key={team.name} value={team.name}>{team.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                              <Select name="awayTeam" value={props.values.awayTeam} onValueChange={(value) => props.setFieldValue("awayTeam", value)}>
-                                <SelectTrigger value={props.values.awayTeam}>
+                              <Select name="awayTeam" value={props.values.awayTeamName} onValueChange={(value) => props.setFieldValue("awayTeam", value)}>
+                                <SelectTrigger value={props.values.awayTeamName}>
                                   <SelectValue placeholder="Zvol hostující tým" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {tournamentData?.teams.filter(team => team.groupName === props.values.group && team.name !== props.values.homeTeam).map(team => (
-                                    <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                                  {teams.filter(team => team.groupName === props.values.group && team.name !== props.values.homeTeamName).map(team => (
+                                    <SelectItem key={team.name} value={team.name}>{team.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -229,8 +233,8 @@ export const ManageMatches = ({ id }: { id: string }) => {
           onSubmit={(values, actions) => {
             const { date, homeTeam, awayTeam } = values;
             const parsedDate = new Date(date);
-            const homeTeamId = tournamentData?.teams.filter(team => team.name === homeTeam)[0]?.id;
-            const awayTeamId = tournamentData?.teams.filter(team => team.name === awayTeam)[0]?.id;
+            const homeTeamId = teams.find(team => team.name === homeTeam)?.id;
+            const awayTeamId = teams.find(team => team.name === awayTeam)?.id;
             if (homeTeamId && awayTeamId) {
               createMatch({
                 date: parsedDate,
@@ -254,50 +258,42 @@ export const ManageMatches = ({ id }: { id: string }) => {
                     value={props.values.date}
                     onChange={props.handleChange}
                   />
-                  {/* <Select name="group" onValueChange={(value) => props.setFieldValue("group", value)}>
+                  <Select name="group" onValueChange={(value) => props.setFieldValue("group", value)}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Zvol skupinu" />
                     </SelectTrigger>
                     <SelectContent>
-                      {tournamentGroups.map((group: string) => (
-                        <SelectItem key={group} value={group}>{group}</SelectItem>
+                      {groups.map(group => (
+                        <SelectItem key={group.name} value={group.name}>{group.name}</SelectItem>
                       ))}
                     </SelectContent>
-                  </Select> */}
+                  </Select>
                 </div>
                 <div className="flex flex-col gap-5">
                   <div className="flex gap-5">
-                    <Select name="homeTeam" onValueChange={(value) => props.setFieldValue("homeTeam", value)}>
+                    <Select disabled={!props.values.group} name="homeTeam" onValueChange={(value) => props.setFieldValue("homeTeam", value)}>
                       <SelectTrigger className="w-full" value={props.values.homeTeam}>
                         <SelectValue placeholder="Zvol domácí tým" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* {tournamentData?.teams.filter(team => team.groupName === props.values.group).map(team => (
-                          <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
-                        ))} */}
-                        {tournamentData?.teams.map(team => (
-                          <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                        {teams.filter(team => team.groupName === props.values.group).map(team => (
+                          <SelectItem key={team.name} value={team.name}>{team.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select name="awayTeam" onValueChange={(value) => props.setFieldValue("awayTeam", value)}>
+                    <Select disabled={!props.values.group} name="awayTeam" onValueChange={(value) => props.setFieldValue("awayTeam", value)}>
                       <SelectTrigger className="w-full" value={props.values.awayTeam}>
                         <SelectValue placeholder="Zvol hostující tým" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* {tournamentData?.teams.filter(team => team.groupName === props.values.group && team.name !== props.values.homeTeam).map(team => (
-                          <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
-                        ))} */}
-                        {tournamentData?.teams.filter(team => team.name !== props.values.homeTeam).map(team => (
-                          <SelectItem key={team.id} value={team.name}>{team.name}</SelectItem>
+                        {teams.filter(team => team.groupName === props.values.group && team.name !== props.values.homeTeam).map(team => (
+                          <SelectItem key={team.name} value={team.name}>{team.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-                <div>
-                  <Button type="submit" className="text-2xl uppercase font-semibold w-full" disabled={props.isSubmitting}>Vytvořit zápas</Button>
-                </div>
+                <Button className="text-2xl uppercase font-semibold w-full py-7" disabled={props.isSubmitting}>Vytvořit zápas</Button>
               </div>
               <table>
                 <thead>
@@ -310,12 +306,12 @@ export const ManageMatches = ({ id }: { id: string }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {matches?.map(match => (
+                {matches?.map(match => (
                   <tr key={match.id}>
                     <td className="font-semibold text-center">{match.played ? "Odehráno" : dayjs(match.date).fromNow()}</td>
-                    <td className="font-semibold text-center">{match.homeTeam.name}</td>
+                    <td className="font-semibold text-center">{match.homeTeamName}</td>
                     <td className="font-semibold text-center">{match.homeScore}:{match.awayScore}</td>
-                    <td className="font-semibold text-center">{match.awayTeam.name}</td>
+                    <td className="font-semibold text-center">{match.awayTeamName}</td>
                     <td className={`flex flex-col lg:grid ${match.locked ? "lg:grid-cols-1" : "lg:grid-cols-3"} !p-0 border-none`}>
                       <div className={cn(`${match.locked ? "hidden" : "px-2 py-1 border-b border-b-slate-50 lg:border-b-0 lg:border-r lg:border-r-slate-50 lg:py-2"}`)}>
                         <AlertDialog>
@@ -326,7 +322,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
                             <AlertDialogHeader>
                               <AlertDialogTitle className="text-3xl">Chceš smazat tento zápas?</AlertDialogTitle>
                               <AlertDialogDescription className="text-xl font-bold text-black text-center py-2">
-                                {match.homeTeam.name} vs. {match.awayTeam.name}
+                                {match.homeTeamName} vs. {match.awayTeamName}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -343,11 +339,11 @@ export const ManageMatches = ({ id }: { id: string }) => {
                           setEditedMatch({
                             date: dayjs(match.date).format("YYYY-MM-DDThh:mm"),
                             matchId: match.id,
-                            group: match.homeTeam.groupName,
-                            homeTeamId: match.homeTeam.id,
-                            awayTeamId: match.awayTeam.id,
-                            homeTeam: match.homeTeam.name,
-                            awayTeam: match.awayTeam.name,
+                            group: match.homeTeamGroupName,
+                            homeTeamId: match.homeTeamId,
+                            homeTeamName: match.homeTeamName,
+                            awayTeamId: match.awayTeamId,
+                            awayTeamName: match.awayTeamName,
                             homeScore: match.homeScore,
                             awayScore: match.awayScore
                           })
@@ -363,7 +359,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
                             <AlertDialogHeader>
                               <AlertDialogTitle className="text-3xl">Chceš odemknout tento zápas?</AlertDialogTitle>
                               <AlertDialogDescription className="text-xl font-bold text-black text-center py-2">
-                                {match.homeTeam.name} vs. {match.awayTeam.name}
+                                {match.homeTeamName} vs. {match.awayTeamName}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -383,7 +379,7 @@ export const ManageMatches = ({ id }: { id: string }) => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="text-3xl">Chceš uzamknout tento zápas?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-xl font-bold text-black text-center py-2">
-                                  {match.homeTeam.name} vs. {match.awayTeam.name}
+                                  {match.homeTeamName} vs. {match.awayTeamName}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -410,12 +406,28 @@ export const ManageMatches = ({ id }: { id: string }) => {
   )
 }
 
-export const getServerSideProps = (context: GetServerSidePropsContext) => {
+export const getStaticProps: GetStaticProps = async (context) => {
+  const ssg = generateSSGHelper();
+
+  const id = context.params?.id;
+
+  if (typeof id !== "string") throw new Error("No id");
+
+  await ssg.teams.getSortedTeams.prefetch({ tournamentId: parseInt(id) });
+  await ssg.teams.getGroups.prefetch({ tournamentId: parseInt(id) });
+  await ssg.matches.getMatches.prefetch({ tournamentId: parseInt(id) });
+
   return {
     props: {
-      id: context.query.id
-    }
-  }
-};
+      trpcState: ssg.dehydrate(),
+      id,
+    },
+  };
+}
 
-export default ManageMatches;
+export const getStaticPaths = () => {
+  return { 
+    paths: [], 
+    fallback: false 
+  }
+}

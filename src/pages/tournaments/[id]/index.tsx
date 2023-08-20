@@ -1,5 +1,5 @@
 import SingleTournamentLayout from "@/components/SingleTournamentLayout";
-import { type GetServerSidePropsContext } from "next";
+import { type GetStaticProps } from "next";
 import { api } from "~/utils/api";
 import { Download, Swords, Users } from "lucide-react";
 import Loading from "@/components/Loading";
@@ -8,35 +8,41 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocale from "dayjs/plugin/updateLocale";
 import "dayjs/locale/cs";
-import { players } from "~/data/players";
+import { generateSSGHelper } from "~/server/helpers/ssgHelper";
 dayjs.locale("cs");
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocale);
 
-export const SingleTournamentPage = ({ id }: { id: string }) => {
-  const { isLoading, data: tournamentData } = api.tournament.getAllTournamentData.useQuery({ tournamentId: parseInt(id) });
+export default function SingleTournamentPage({ id }: { id: string }) {
+    const { isLoading, data: tournament } = api.tournament.getAllTournamentData.useQuery({ tournamentId: parseInt(id) });
 
   function makeTableCSV() {
-    const csv = [];
-    const firstRow = ["Hráči / Zápasy"];
-    tournamentData?.tournamentMatchTips?.map(match => {
-      firstRow.push(`${match.homeTeam.name} - ${match.awayTeam.name}`);
-    });
-    const tableContent: string[][] = [];
-    tournamentData?.players?.map(player => {
-      const row = [];
-      row.push(player.username);
-      tournamentData?.tournamentMatchTips?.map(match => {
-        const matchTip = match.userMatchTip.find(tip => tip.playerId === player.id);
-        row.push(`${matchTip?.homeScore || 0}:${matchTip?.awayScore || 0}`);
-      });
-      tableContent.push(row as string[]);
-    });
-    csv.push(firstRow, ...tableContent);
-    const csvContent = "data:text/csv;charset=utf-8," + csv.map(e => e.join(";")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    window.open(encodedUri);
+    // TODO: Completely rewrite download
+
+    // const csv = [];
+    // const firstRow = ["Hráči / Zápasy"];
+    // tournament?.matches?.map(match => {
+    //   firstRow.push(`${match.homeTeamName} - ${match.awayTeamName}`);
+    // });
+    // const tableContent: string[][] = [];
+    // tournament?.data?.map(info => {
+    //   const row = [];
+    //   row.push(info.username);
+    //   tournament?.matches?.map(match => {
+    //     const matchTip = match.userMatchTip.find(tip => tip.playerId === player.id);
+    //     row.push(`${matchTip?.homeScore || 0}:${matchTip?.awayScore || 0}`);
+    //   });
+    //   tableContent.push(row as string[]);
+    // });
+    // csv.push(firstRow, ...tableContent);
+    // const csvContent = "data:text/csv;charset=utf-8," + csv.map(e => e.join(";")).join("\n");
+    // const encodedUri = encodeURI(csvContent);
+    // window.open(encodedUri);
   }
+  
+  if (!tournament) return null;
+
+  const numberOfMatches: number = tournament.userMatches.length / tournament.data.length;
 
   return (
     <SingleTournamentLayout>
@@ -44,7 +50,7 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
       <>
         <div className="flex justify-center items-center gap-4">
           <h1 className="text-center text-4xl font-semibold">
-            {tournamentData?.name}
+            {tournament.data[0]?.name}
           </h1>
           <Download className="cursor-pointer" onClick={makeTableCSV} />
         </div>
@@ -55,35 +61,28 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
               <span className="hidden lg:inline">/</span>
               <span className="flex justify-center w-full p-2 lg:p-0 border-b border-b-slate-50 lg:border-none"><Swords /></span>
             </div>
-            {players?.map(player => (
-              <div key={player} className="px-3 py-2 text-xl [&:not(:last-child)]:border-b border-slate-50">
-                {player}
+            {tournament.data.map(data => (
+              <div key={data.username} className="px-3 py-2 text-xl [&:not(:last-child)]:border-b border-slate-50">
+                {data.username}
               </div>
             ))}
-            {/* {tournamentData?.players?.map(player => (
-              <div key={player.playerId} className="px-3 py-2 text-xl [&:not(:last-child)]:border-b border-slate-50">
-                {player.username}
-              </div>
-            ))} */}
           </div>
           <div className="flex border border-slate-50 overflow-x-auto custom-scrollbar">
-            {tournamentData?.tournamentMatchTips?.map(matchTip => (
-              <div key={matchTip.id} className="[&:not(:last-child)]:border-r border-r-slate-50">
-                <div className="border-b border-b-slate-50 flex flex-col lg:flex-row p-0 lg:p-3 gap-0 lg:gap-2">
-                  <span className="p-2 lg:p-0 border-b border-b-slate-50 lg:border-none">{matchTip.homeTeam.name}</span>
-                  <span className="hidden lg:inline-block">-</span> 
-                  <span className="p-2 lg:p-0">{matchTip.awayTeam.name}</span>
-                </div>
-                {matchTip.userMatchTip.map(userMatchTip => {
-                  return (
-                    <div key={userMatchTip.id} className="[&:not(:last-child)]:border-b border-slate-50 flex justify-center text-xl gap-1 py-2">
-                      <span>{userMatchTip.homeScore}</span>
-                      :
-                      <span>{userMatchTip.awayScore}</span>
+            {/* TODO: Try to make it clearer 😅 */}
+            {Array.from({ length: numberOfMatches }, (_, index) => index).map((col, row) => (
+              <div key={tournament.userMatches[row]?.id} className="[&:not(:last-child)]:border-r border-r-slate-50">
+                  <div className="border-b border-b-slate-50 flex flex-col lg:flex-row p-0 lg:p-3 gap-0 lg:gap-2">
+                    <span className="p-2 lg:p-0 border-b border-b-slate-50 lg:border-none">{tournament.userMatches[row]?.homeTeamName}</span>
+                    <span className="hidden lg:inline-block">-</span> 
+                    <span className="p-2 lg:p-0">{tournament.userMatches[row]?.awayTeamName}</span>
+                  </div>
+                  {tournament.userMatches.slice(col * tournament.data.length, col * tournament.data.length + tournament.data.length).map(userMatch => (
+                    <div key={userMatch.id} className="[&:not(:last-child)]:border-b border-slate-50 flex justify-center text-xl gap-1 py-2">
+                      <span>{userMatch.homeScore}</span> :
+                      <span>{userMatch.awayScore}</span>
                     </div>
-                  )
-                })}
-              </div>
+                  ))}
+                </div>
             ))}
           </div>
         </div>
@@ -92,12 +91,26 @@ export const SingleTournamentPage = ({ id }: { id: string }) => {
   )
 }
 
-export const getServerSideProps = (ctx: GetServerSidePropsContext) => {
+export const getStaticProps: GetStaticProps = async (context) => {
+  const ssg = generateSSGHelper();
+
+  const id = context.params?.id;
+
+  if (typeof id !== "string") throw new Error("No id");
+
+  await ssg.tournament.getAllTournamentData.prefetch({ tournamentId: parseInt(id) });
+
   return {
     props: {
-      id: ctx.query.id
-    }
-  }
+      trpcState: ssg.dehydrate(),
+      id,
+    },
+  };
 }
 
-export default SingleTournamentPage;
+export const getStaticPaths = () => {
+  return { 
+    paths: [], 
+    fallback: false 
+  }
+}

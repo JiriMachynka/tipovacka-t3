@@ -6,14 +6,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Formik } from "formik";
 import { Edit } from "lucide-react";
-import { type GetServerSidePropsContext } from "next";
 import { useState } from "react";
 import { api } from "~/utils/api";
 import { type EditedScorer } from "@/types";
 import Loading from "@/components/Loading";
+import type { GetStaticProps } from "next";
+import { generateSSGHelper } from "~/server/helpers/ssgHelper";
 
 
-export const MyTips = ({ id }: { id: string }) => {
+export default function MyTips({ id }: { id: string }) {
   const [editedScorer, setEditedScorer] = useState<EditedScorer>(null);
   const { toast } = useToast();
   const utils = api.useContext();
@@ -131,12 +132,26 @@ export const MyTips = ({ id }: { id: string }) => {
   )
 }
 
-export const getServerSideProps = (context: GetServerSidePropsContext) => {
+export const getStaticProps: GetStaticProps = async (context) => {
+  const ssg = generateSSGHelper();
+
+  const id = context.params?.id;
+
+  if (typeof id !== "string") throw new Error("No id");
+
+  await ssg.tournament.getScorers.prefetch({ tournamentId: parseInt(id) });
+
   return {
     props: {
-      id: context.query.id
-    }
-  }
-};
+      trpcState: ssg.dehydrate(),
+      id,
+    },
+  };
+}
 
-export default MyTips;
+export const getStaticPaths = () => {
+  return { 
+    paths: [], 
+    fallback: false 
+  }
+}

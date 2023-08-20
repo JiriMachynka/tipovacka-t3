@@ -23,7 +23,7 @@ const SingleTournamentNavigation = () => {
   const router = useRouter();
   const user = useAuth();
   const { signOut } = useClerk();
-  const { data: tournamentData } = api.tournament.getAllTournamentData.useQuery({ tournamentId: parseInt(router.query.id as string) });
+  const { data: tournament } = api.tournament.getAllTournamentData.useQuery({ tournamentId: parseInt(router.query.id as string) });
 
   useEffect(() => {
     setCurrentPageTitle(router.pathname.split("/")[router.pathname.split("/").length - 1]);
@@ -80,11 +80,11 @@ const SingleTournamentNavigation = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            {(tournamentData?.authorId === user.userId) && (<>
+            {(tournament?.data[0]?.authorId === user.userId) && (<>
               <NavigationMenuItem className={cn("hidden lg:inline-flex")}>
                 <NavigationMenuTrigger>Admin sekce</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="flex flex-col w-[300px] bg-primary">
+                  <ul className="flex flex-col w-[300px] bg-primary text-white">
                     <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-matches`} title="Spravovat zápasy" />
                     <ListItem className="border-b border-b-slate-50 !rounded-none" href={`/tournaments/${router.query.id as string}/manage-scorers`} title="Spravovat střelce" />
                     <ListItem className="!rounded-none" href={`/tournaments/${router.query.id as string}/manage-players`} title="Spravovat hráče" />
