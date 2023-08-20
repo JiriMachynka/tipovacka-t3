@@ -8,6 +8,13 @@
       "when": 1692294221453,
       "tag": "0000_new_young_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1692544699597,
+      "tag": "0001_cooing_hercules",
+      "breakpoints": true
     }
   ]
 }

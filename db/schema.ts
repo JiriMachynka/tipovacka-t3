@@ -64,6 +64,6 @@ export const Scorer = pgTable("scorer", {
   tournamentId: integer("tournament_id").notNull().references(() => Tournaments.id),
   firstName: varchar("first_name", { length: 255 }).notNull(),
   lastName: varchar("last_name", { length: 255 }).notNull(),
-  goals: integer("goals").default(0),
-  assists: integer("assists").default(0),
+  goals: integer("goals").notNull().default(0),
+  assists: integer("assists").notNull().default(0),
 });
