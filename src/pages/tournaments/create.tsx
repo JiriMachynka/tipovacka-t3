@@ -15,12 +15,12 @@ const CreateTournamentPage = () => {
   const { toast } = useToast();
   const { data: userList } = api.users.getAllUsers.useQuery();
   const { mutate: createTournament } = api.tournament.createTournament.useMutation({
-    onSuccess(data) {
+    onSuccess(id) {
       toast({
         title: "Vytvořeno",
         description: "Tipovačka byla úspěšně vytvořena",
       });
-      void router.push(`/tournaments/${data!.toString()}`);
+      void router.push(`/tournaments/${id}`);
     },
     onError() {
       toast({

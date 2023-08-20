@@ -15,6 +15,13 @@
       "when": 1692544699597,
       "tag": "0001_cooing_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1692545606555,
+      "tag": "0002_flaky_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }
