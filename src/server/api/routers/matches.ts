@@ -201,22 +201,25 @@ export const matchesRouter = createTRPCRouter({
         .from(UserMatchTips)
         .where(eq(UserMatchTips.tournamentMatchTipId, tournamentMatchTip[0]!.id));
 
+      const tournamentHomeScore = tournamentMatchTip[0]?.homeScore as number;
+      const tournamentAwayScore = tournamentMatchTip[0]?.awayScore as number;
+
       userMatchTips.map(async (matchTip) => {
-        const draw = matchTip.homeScore === matchTip.awayScore && tournamentMatchTip[0]!.homeScore === tournamentMatchTip[0]!.awayScore;
-        const homeWin = matchTip.homeScore > matchTip.awayScore && tournamentMatchTip[0]!.homeScore > tournamentMatchTip[0]!.awayScore;
-        const awayWin = matchTip.homeScore < matchTip.awayScore && tournamentMatchTip[0]!.homeScore < tournamentMatchTip[0]!.awayScore;
+        const draw = matchTip.homeScore === matchTip.awayScore && tournamentHomeScore === tournamentAwayScore;
+        const homeWin = matchTip.homeScore > matchTip.awayScore && tournamentHomeScore > tournamentAwayScore;
+        const awayWin = matchTip.homeScore < matchTip.awayScore && tournamentHomeScore < tournamentAwayScore;
 
         const exactDraw = 
-          (matchTip.homeScore === tournamentMatchTip[0]!.homeScore) && 
-          (matchTip.homeScore === matchTip.awayScore && tournamentMatchTip[0]!.homeScore === tournamentMatchTip[0]!.awayScore);
+          (matchTip.homeScore === tournamentHomeScore) && 
+          (matchTip.homeScore === matchTip.awayScore && tournamentHomeScore === tournamentAwayScore);
 
         const exactHomeWin = 
-          (matchTip.homeScore === tournamentMatchTip[0]!.homeScore && matchTip.awayScore === tournamentMatchTip[0]!.awayScore) &&
-          (matchTip.homeScore > matchTip.awayScore && tournamentMatchTip[0]!.homeScore > tournamentMatchTip[0]!.awayScore);
+          (matchTip.homeScore === tournamentHomeScore && matchTip.awayScore === tournamentAwayScore) &&
+          (matchTip.homeScore > matchTip.awayScore && tournamentHomeScore > tournamentAwayScore);
 
           const exactAwayWin = 
-            (matchTip.homeScore === tournamentMatchTip[0]!.homeScore && matchTip.awayScore === tournamentMatchTip[0]!.awayScore) && 
-            (matchTip.homeScore < matchTip.awayScore && tournamentMatchTip[0]!.homeScore < tournamentMatchTip[0]!.awayScore);
+            (matchTip.homeScore === tournamentHomeScore && matchTip.awayScore === tournamentAwayScore) && 
+            (matchTip.homeScore < matchTip.awayScore && tournamentHomeScore < tournamentAwayScore);
 
         console.log((exactDraw || exactHomeWin || exactAwayWin) ? 3 : (draw || homeWin || awayWin) ? 1 : 0)
         await ctx.db
