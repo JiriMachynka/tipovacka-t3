@@ -3,7 +3,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { Teams, Tournaments, Players, TournamentOverallTips, TournamentMatchTips, Users, UserMatchTips, Scorer } from "@/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
-import type { TournamentOverallTipsSQL, UserMatchTip } from "@/types";
+import type { TournamentOverallTipsSQL } from "@/types";
+import { alias } from "drizzle-orm/pg-core";
 
 export const tournamentRouter = createTRPCRouter({
   createTournament: protectedProcedure
@@ -121,23 +122,21 @@ export const tournamentRouter = createTRPCRouter({
     }),
   getAllTournaments: protectedProcedure
     .query(async ({ ctx }) => {
-      if (ctx.userId) {
-        const allTournaments = await ctx.db
-          .select({
-            id: Tournaments.id,
-            name: Tournaments.name,
-          })
-          .from(Tournaments)
-          .leftJoin(Players, eq(Tournaments.id, Players.tournamentId))
-          .where(
-            or(
-              eq(Tournaments.authorId, ctx.userId),
-              eq(Players.userId, ctx.userId),
-            )
-          );
-        return allTournaments;
-      }
-      return null;
+      const allTournaments = await ctx.db
+        .select({
+          id: Tournaments.id,
+          name: Tournaments.name,
+        })
+        .from(Tournaments)
+        .leftJoin(Players, eq(Tournaments.id, Players.tournamentId))
+        .where(
+          or(
+            eq(Tournaments.authorId, ctx.userId),
+            eq(Players.userId, ctx.userId),
+          )
+        );
+
+      return allTournaments || [];
     }),
   getAllTournamentData: protectedProcedure
     .input(z.object({
@@ -157,24 +156,30 @@ export const tournamentRouter = createTRPCRouter({
         .leftJoin(Users, eq(Players.userId, Users.id))
         .where(eq(Tournaments.id, tournamentId));
 
-      const { rows: userMatches } = await ctx.db.execute(sql`
-        SELECT
-          user_match_tips.id as "Id",
-          home_team.name as "homeTeamName",
-          away_team.name as "awayTeamName",
-          user_match_tips.home_score as "homeScore",
-          user_match_tips.away_score as "awayScore"
-        FROM user_match_tips
-        LEFT JOIN tournament_match_tips ON user_match_tips.tournament_match_tip_id = tournament_match_tips.id
-        LEFT JOIN tournaments ON tournament_match_tips.tournament_id = tournaments.id
-        LEFT JOIN teams as home_team ON tournament_match_tips.home_team_id = home_team.id
-        LEFT JOIN teams as away_team ON tournament_match_tips.away_team_id = away_team.id
-        WHERE tournament_match_tips.locked = true AND tournament_match_tips.tournament_id = ${tournamentId};
-      `);
+      const homeTeam = alias(Teams, "home_team");
+      const awayTeam = alias(Teams, "away_team");
+
+      const userMatches = await ctx.db
+        .select({
+          Id: UserMatchTips.id,
+          homeTeamName: homeTeam.name,
+          awayTeamName: awayTeam.name,
+          homeScore: UserMatchTips.homeScore,
+          awayScore: UserMatchTips.awayScore,
+        })
+        .from(UserMatchTips)
+        .leftJoin(TournamentMatchTips, eq(UserMatchTips.tournamentMatchTipId, TournamentMatchTips.id))
+        .leftJoin(Tournaments, eq(TournamentMatchTips.tournamentId, Tournaments.id))
+        .leftJoin(homeTeam, eq(TournamentMatchTips.homeTeamId, homeTeam.id))
+        .leftJoin(awayTeam, eq(TournamentMatchTips.awayTeamId, awayTeam.id))
+        .where(and(
+          eq(TournamentMatchTips.locked, true),
+          eq(TournamentMatchTips.tournamentId, tournamentId),
+        ));
 
       return {
         data,
-        userMatches: userMatches as UserMatchTip[]
+        userMatches,
       };
     }),
   getTournamentPlayers: protectedProcedure
@@ -198,23 +203,27 @@ export const tournamentRouter = createTRPCRouter({
     }),
   getTournamentOverallTips: protectedProcedure
     .query(async ({ ctx }) => {
-      // TODO: Make it safer, refactor in the future
-      const { rows } = await ctx.db.execute(sql.raw(`
-        SELECT
-          winner.name as "winnerName",
-          finalist.name as "finalistName",
-          semifinalistFirst.name as "semifinalistFirstName",
-          semifinalistSecond.name as "semifinalistSecondName"
-        FROM players
-        LEFT JOIN tournament_overall_tips ON players.tournament_overall_tip_id = tournament_overall_tips.id
-        LEFT JOIN teams AS winner ON tournament_overall_tips.winner_id = winner.id
-        LEFT JOIN teams AS finalist ON tournament_overall_tips.finalist_id = finalist.id
-        LEFT JOIN teams AS semifinalistFirst ON tournament_overall_tips.semifinalist_first_id = semifinalistFirst.id
-        LEFT JOIN teams AS semifinalistSecond ON tournament_overall_tips.semifinalist_second_id = semifinalistSecond.id
-        WHERE players.user_id = '${ctx.userId}';
-      `));
+      const winner = alias(Teams, "winner");
+      const finalist = alias(Teams, "finalist");
+      const semifinalistFirst = alias(Teams, "semifinalist_first");
+      const semifinalistSecond = alias(Teams, "semifinalist_second");
 
-      return rows[0] as TournamentOverallTipsSQL;
+      const tournamentOverallTips = await ctx.db
+        .select({
+          winnerName: winner.name,
+          finalistName: finalist.name,
+          semifinalistFirstName: semifinalistFirst.name,
+          semifinalistSecondName: semifinalistSecond.name,
+        })
+        .from(Players)
+        .leftJoin(TournamentOverallTips, eq(Players.tournamentOverallTipId, TournamentOverallTips.id))
+        .leftJoin(winner, eq(TournamentOverallTips.winnerId, winner.id))
+        .leftJoin(finalist, eq(TournamentOverallTips.finalistId, finalist.id))
+        .leftJoin(semifinalistFirst, eq(TournamentOverallTips.semifinalistFirstId, semifinalistFirst.id))
+        .leftJoin(semifinalistSecond, eq(TournamentOverallTips.semifinalistSecondId, semifinalistSecond.id))
+        .where(eq(Players.userId, ctx.userId));
+
+      return tournamentOverallTips[0];
     }),
   updateTournamentOverallTips: protectedProcedure
     .input(z.object({

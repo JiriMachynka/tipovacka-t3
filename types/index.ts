@@ -23,28 +23,6 @@ export type DeletedPlayer = {
   username: string | null | undefined;
 } | null;
 
-export type Match = {
-  id: number
-  date: Date
-  homeTeamId: number
-  homeTeamName: string
-  homeTeamGroupName: string
-  awayTeamId: number
-  awayTeamName: string
-  awayTeamGroupName: string
-  homeScore: number
-  awayScore: number
-  played: boolean
-  locked: boolean
-}
-
-export type Scorers = {
-  scorerFirstFirstName: string
-  scorerFirstLastName: string
-  scorerSecondFirstName: string
-  scorerSecondLastName: string
-}
-
 export type TournamentOverallTipsSQL = {
   winnerName: string
   finalistName: string
@@ -52,33 +30,8 @@ export type TournamentOverallTipsSQL = {
   semifinalistSecondName: string
 }
 
-export type PlayerMatches = {
-  id: number
-  date: Date
-  homeTeamId: number
-  homeTeamName: string
-  homeTeamGroupName: string
-  awayTeamId: number
-  awayTeamName: string
-  awayTeamGroupName: string
-  homeScore: number
-  awayScore: number
-  played: boolean
-  locked: boolean
-}
-
 export type TournamentMatchTip = {
   id: number
   homeTeamName: string
   awayTeamName: string
-}
-
-export type UserMatchTip = {
-  id: number
-  name: string
-  username: string
-  homeTeamName: string
-  awayTeamName: string
-  homeScore: number
-  awayScore: number
 }
