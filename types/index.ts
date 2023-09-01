@@ -22,16 +22,3 @@ export type DeletedPlayer = {
   id: number;
   username: string | null | undefined;
 } | null;
-
-export type TournamentOverallTipsSQL = {
-  winnerName: string
-  finalistName: string
-  semifinalistFirstName: string
-  semifinalistSecondName: string
-}
-
-export type TournamentMatchTip = {
-  id: number
-  homeTeamName: string
-  awayTeamName: string
-}

@@ -2,8 +2,7 @@ import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { Teams, Tournaments, Players, TournamentOverallTips, TournamentMatchTips, Users, UserMatchTips, Scorer } from "@/db/schema";
-import { and, eq, or, sql } from "drizzle-orm";
-import type { TournamentOverallTipsSQL } from "@/types";
+import { and, eq, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 export const tournamentRouter = createTRPCRouter({
@@ -161,7 +160,7 @@ export const tournamentRouter = createTRPCRouter({
 
       const userMatches = await ctx.db
         .select({
-          Id: UserMatchTips.id,
+          id: UserMatchTips.id,
           homeTeamName: homeTeam.name,
           awayTeamName: awayTeam.name,
           homeScore: UserMatchTips.homeScore,

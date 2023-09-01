@@ -339,13 +339,13 @@ export default function ManageMatches({ id }: { id: string }) {
                           setEditedMatch({
                             date: dayjs(match.date).format("YYYY-MM-DDThh:mm"),
                             matchId: match.id,
-                            group: match.homeTeamGroupName,
-                            homeTeamId: match.homeTeamId,
-                            homeTeamName: match.homeTeamName,
-                            awayTeamId: match.awayTeamId,
-                            awayTeamName: match.awayTeamName,
-                            homeScore: match.homeScore,
-                            awayScore: match.awayScore
+                            group: match.homeTeamName as string,
+                            homeTeamId: match.homeTeamId as number,
+                            homeTeamName: match.homeTeamName as string,
+                            awayTeamId: match.awayTeamId as number,
+                            awayTeamName: match.awayTeamName as string,
+                            homeScore: match.homeScore as number,
+                            awayScore: match.awayScore as number
                           })
                         }} className="mx-auto cursor-pointer" size={20} />
                       </div>

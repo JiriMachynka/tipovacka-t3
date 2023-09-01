@@ -88,7 +88,7 @@ export const playersRouter = createTRPCRouter({
         .leftJoin(scorerSecond, eq(Players.scorerSecondId, scorerSecond.id))
         .where(eq(Players.tournamentId, tournamentId));
 
-      return scorers;
+      return scorers[0];
     }),
   getLeaderboardData: protectedProcedure
     .input(z.object({
