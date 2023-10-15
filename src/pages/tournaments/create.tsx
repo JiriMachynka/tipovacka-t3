@@ -8,6 +8,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import { Formik } from "formik";
 import { useToast } from "@/components/ui/use-toast";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 const CreateTournamentPage = () => {
   const router = useRouter();
@@ -66,11 +67,24 @@ const CreateTournamentPage = () => {
               <Input id="tournamentName" name="tournamentName" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.tournamentName} className="w-full" type="text" placeholder="Název tipovačky" />
             </div>
             <div className="flex flex-col gap-3">
-              <Label htmlFor="players">Hráči</Label>
+              <div className="flex gap-3">
+                <Label htmlFor="players">Hráči</Label>
+                <InfoTooltip>
+                  <p className="text-base">Hráči se zadávají ve formátu:</p>
+                  <p className="text-base">Každý hráč na novém řádku</p>
+                </InfoTooltip>
+              </div>
               <Textarea id="players" name="players" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.players} className="w-full h-52" />
             </div>
             <div className="flex flex-col w-full gap-3">
-              <Label htmlFor="teams">Týmy</Label>
+              <div className="flex gap-3">
+                <Label htmlFor="teams">Týmy</Label>
+                <InfoTooltip>
+                  <p className="text-base">Týmy se zadávají ve formátu:</p>
+                  <p className="text-base">Název týmu, Název týmu, Název týmu</p>
+                  <p className="text-base">Každý skupina na novém řádku</p>
+                </InfoTooltip>
+              </div>
               <Textarea id="teams" name="teams" onChange={props.handleChange} onBlur={props.handleBlur} value={props.values.teams} className="h-52" />
             </div>
             <Button className="text-xl py-7 lg:text-3xl lg:py-10" type="submit" disabled={props.isSubmitting}>Vytvořit tipovačku</Button>
