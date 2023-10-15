@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { Teams, Tournaments, Players, TournamentOverallTips, TournamentMatchTips, Users, UserMatchTips, Scorer } from "@/db/schema";
 import { and, eq, or, sql } from "drizzle-orm";
 import type { TournamentOverallTipsSQL, UserMatchTip } from "@/types";
@@ -119,7 +119,7 @@ export const tournamentRouter = createTRPCRouter({
       }
       return null;
     }),
-  getAllTournaments: protectedProcedure
+  getAllTournaments: publicProcedure
     .query(async ({ ctx }) => {
       if (ctx.userId) {
         const allTournaments = await ctx.db
@@ -137,7 +137,7 @@ export const tournamentRouter = createTRPCRouter({
           );
         return allTournaments;
       }
-      return null;
+      return [];
     }),
   getAllTournamentData: protectedProcedure
     .input(z.object({
