@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { and, eq, sql } from "drizzle-orm";
 import { Users, Players, UserMatchTips, Scorer } from "@/db/schema";
-import type { Scorers } from "@/types";
+import { alias } from "drizzle-orm/pg-core";
 
 export const playersRouter = createTRPCRouter({
   createScorer: protectedProcedure
@@ -71,22 +71,24 @@ export const playersRouter = createTRPCRouter({
       tournamentId: z.number(),
     }))
     .query(async ({ ctx, input }) => {
-      // TODO: Works completely fine for now, but should be refactored to use the ORM in the future
       const { tournamentId } = input;
 
-        const { rows } = await ctx.db.execute(sql`
-        SELECT 
-          scorer_first.first_name AS "scorerFirstFirstName",
-          scorer_first.last_name AS "scorerFirstLastName",
-          scorer_second.first_name AS "scorerSecondFirstName",
-          scorer_second.last_name AS "scorerSecondLastName"
-        FROM players
-        LEFT JOIN scorer AS scorer_first ON players.scorer_first_id = scorer_first.id
-        LEFT JOIN scorer AS scorer_second ON players.scorer_second_id = scorer_second.id
-        WHERE players.tournament_id = ${tournamentId};
-        `);
+      const scorerFirst = alias(Scorer, "scorer_first");
+      const scorerSecond = alias(Scorer, "scorer_second");
 
-      return rows[0] as Scorers;
+      const scorers = await ctx.db
+        .select({
+          scorerFirstFirstName: scorerFirst.firstName,
+          scorerFirstLastName: scorerFirst.lastName,
+          scorerSecondFirstName: scorerSecond.firstName,
+          scorerSecondLastName: scorerSecond.lastName,
+        })
+        .from(Players)
+        .leftJoin(scorerFirst, eq(Players.scorerFirstId, scorerFirst.id))
+        .leftJoin(scorerSecond, eq(Players.scorerSecondId, scorerSecond.id))
+        .where(eq(Players.tournamentId, tournamentId));
+
+      return scorers[0];
     }),
   getLeaderboardData: protectedProcedure
     .input(z.object({

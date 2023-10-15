@@ -394,13 +394,13 @@ export default function MyTips({ id }: { id: string }) {
                           setEditedMatch({
                             date: dayjs(match.date).format("YYYY-MM-DDThh:mm"),
                             matchId: match.id,
-                            group: match.homeTeamGroupName,
-                            homeTeamId: match.homeTeamId,
-                            awayTeamId: match.awayTeamId,
-                            homeTeamName: match.homeTeamName,
-                            awayTeamName: match.awayTeamName,
-                            homeScore: match.homeScore,
-                            awayScore: match.awayScore
+                            group: match.homeTeamGroupName as string,
+                            homeTeamId: match.homeTeamId as number,
+                            awayTeamId: match.awayTeamId as number,
+                            homeTeamName: match.homeTeamName as string,
+                            awayTeamName: match.awayTeamName as string,
+                            homeScore: match.homeScore as number,
+                            awayScore: match.awayScore as number
                           })
                         }} className="mx-auto cursor-pointer" size={25} />
                       </td>

@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { Players, TournamentMatchTips, UserMatchTips } from "@/db/schema";
-import type { PlayerMatches, Match } from "@/types";
-import { sql, and, eq } from "drizzle-orm";
+import { Players, Teams, TournamentMatchTips, UserMatchTips } from "@/db/schema";
+import { and, eq, asc } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { alias } from "drizzle-orm/pg-core";
 
 export const matchesRouter = createTRPCRouter({
   createMatch: publicProcedure
@@ -44,31 +44,33 @@ export const matchesRouter = createTRPCRouter({
       tournamentId: z.number(),
     }))
     .query(async ({ ctx, input }) => {
-      // TODO: Works completely fine for now, but should be refactored to use the ORM in the future
       const { tournamentId } = input;
 
-      const { rows } = await ctx.db.execute(sql`
-        SELECT 
-          tournament_match_tips.id,
-          tournament_match_tips.date,
-          home_team.id as "homeTeamId",
-          home_team.name as "homeTeamName",
-          home_team.group_name as "homeTeamGroupName",
-          away_team.id as "awayTeamId",
-          away_team.name as "awayTeamName",
-          away_team.group_name as "awayTeamGroupName",
-          tournament_match_tips.home_score as "homeScore",
-          tournament_match_tips.away_score as "awayScore",
-          tournament_match_tips.played,
-          tournament_match_tips.locked
-        FROM tournament_match_tips
-        JOIN teams AS home_team ON tournament_match_tips.home_team_id = home_team.id
-        JOIN teams AS away_team ON tournament_match_tips.away_team_id = away_team.id
-        WHERE tournament_match_tips.tournament_id = ${tournamentId}
-        ORDER BY tournament_match_tips.date ASC;
-      `);
+      const homeTeam = alias(Teams, "home_team");
+      const awayTeam = alias(Teams, "away_team");
 
-      return rows as Match[];
+      const matches = await ctx.db
+        .select({
+          id: TournamentMatchTips.id,
+          date: TournamentMatchTips.date,
+          homeTeamId: homeTeam.id,
+          homeTeamName: homeTeam.name,
+          homeTeamGroupName: homeTeam.groupName,
+          awayTeamId: awayTeam.id,
+          awayTeamName: awayTeam.name,
+          awayTeamGroupName: awayTeam.groupName,
+          homeScore: TournamentMatchTips.homeScore,
+          awayScore: TournamentMatchTips.awayScore,
+          played: TournamentMatchTips.played,
+          locked: TournamentMatchTips.locked,
+        })
+        .from(TournamentMatchTips)
+        .leftJoin(homeTeam, eq(TournamentMatchTips.homeTeamId, homeTeam.id))
+        .leftJoin(awayTeam, eq(TournamentMatchTips.awayTeamId, awayTeam.id))
+        .where(eq(TournamentMatchTips.tournamentId, tournamentId))
+        .orderBy(asc(TournamentMatchTips.date));
+
+      return matches;
     }
   ),
   getPlayerMatches: protectedProcedure
@@ -78,7 +80,6 @@ export const matchesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { tournamentId } = input;
 
-      // TODO: Works completely fine for now, but should be refactored to use the ORM in the future
       const player = await ctx.db
         .select({ 
           id: Players.id 
@@ -89,31 +90,35 @@ export const matchesRouter = createTRPCRouter({
           eq(Players.userId, ctx.userId),
         ));
 
-        const { rows } = await ctx.db.execute(sql`
-          SELECT 
-            user_match_tips.id,
-            tournament_match_tips.date,
-            home_team.id as "homeTeamId",
-            home_team.name as "homeTeamName",
-            home_team.group_name as "homeTeamGroupName",
-            away_team.id as "awayTeamId",
-            away_team.name as "awayTeamName",
-            away_team.group_name as "awayTeamGroupName",
-            user_match_tips.home_score as "homeScore",
-            user_match_tips.away_score as "awayScore",
-            tournament_match_tips.played,
-            tournament_match_tips.locked
-          FROM user_match_tips
-          LEFT JOIN tournament_match_tips ON user_match_tips.tournament_match_tip_id = tournament_match_tips.id
-          LEFT JOIN teams AS home_team ON tournament_match_tips.home_team_id = home_team.id
-          LEFT JOIN teams AS away_team ON tournament_match_tips.away_team_id = away_team.id
-          WHERE 
-            user_match_tips.player_id = ${player[0]?.id} AND
-            tournament_match_tips.locked = true
-          ORDER BY tournament_match_tips.date ASC;
-        `);
+      const homeTeam = alias(Teams, "home_team");
+      const awayTeam = alias(Teams, "away_team");
 
-      return rows as PlayerMatches[];
+      const matches = await ctx.db
+        .select({
+          id: TournamentMatchTips.id,
+          date: TournamentMatchTips.date,
+          homeTeamId: homeTeam.id,
+          homeTeamName: homeTeam.name,
+          homeTeamGroupName: homeTeam.groupName,
+          awayTeamId: awayTeam.id,
+          awayTeamName: awayTeam.name,
+          awayTeamGroupName: awayTeam.groupName,
+          homeScore: UserMatchTips.homeScore,
+          awayScore: UserMatchTips.awayScore,
+          played: TournamentMatchTips.played,
+          locked: TournamentMatchTips.locked,
+        })
+        .from(TournamentMatchTips)
+        .leftJoin(UserMatchTips, eq(UserMatchTips.tournamentMatchTipId, TournamentMatchTips.id))
+        .leftJoin(homeTeam, eq(TournamentMatchTips.homeTeamId, homeTeam.id))
+        .leftJoin(awayTeam, eq(TournamentMatchTips.awayTeamId, awayTeam.id))
+        .where(and(
+          eq(UserMatchTips.playerId, player[0]?.id as number),
+          eq(TournamentMatchTips.tournamentId, tournamentId)
+        ))
+        .orderBy(asc(TournamentMatchTips.date));
+
+      return matches;
     }),
   updateMatch: publicProcedure
     .input(z.object({
