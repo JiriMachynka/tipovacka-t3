@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Players, Teams, TournamentMatchTips, UserMatchTips } from "@/db/schema";
 import { and, eq, asc } from "drizzle-orm";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { alias } from "drizzle-orm/pg-core";
 
 export const matchesRouter = createTRPCRouter({

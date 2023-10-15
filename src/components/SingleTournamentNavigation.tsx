@@ -14,8 +14,8 @@ import { LogOut, X } from "lucide-react";
 import Link from "next/link"
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { api } from "~/utils/api";
-import { getPageName } from "~/utils/functions";
+import { api } from "@/utils/api";
+import { getPageName } from "@/utils/functions";
 
 const SingleTournamentNavigation = () => {
   const [currentPageTitle, setCurrentPageTitle] = useState<string | undefined>("");

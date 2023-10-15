@@ -1,6 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { sql } from "drizzle-orm";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 
 export const userRouter = createTRPCRouter({
   create: protectedProcedure

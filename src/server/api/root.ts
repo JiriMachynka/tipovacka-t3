@@ -1,5 +1,5 @@
-import { createTRPCRouter } from "~/server/api/trpc";
-import { tournamentRouter } from "~/server/api/routers/tournament";
+import { createTRPCRouter } from "@/server/api/trpc";
+import { tournamentRouter } from "@/server/api/routers/tournament";
 import { userRouter } from "./routers/users";
 import { matchesRouter } from "./routers/matches";
 import { teamsRouter } from "./routers/teams";

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "@/server/api/trpc";
 import { Teams, Tournaments, Players, TournamentOverallTips, TournamentMatchTips, Users, UserMatchTips, Scorer } from "@/db/schema";
 import { and, eq, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";

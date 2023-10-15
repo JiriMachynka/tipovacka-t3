@@ -4,18 +4,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUser } from "@clerk/nextjs";
 import { Formik } from "formik";
 import { Trash, Edit, Lock, Unlock } from "lucide-react";
-import { api } from "~/utils/api";
+import { api } from "@/utils/api";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { cn } from "@/lib/utils";
-import { type EditedMatch } from "@/types";
+import { type EditedMatch } from "~/types";
 import Loading from "@/components/Loading";
 import { useToast } from "@/components/ui/use-toast";
 import type { GetStaticProps } from "next";
-import { generateSSGHelper } from "~/server/helpers/ssgHelper";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
 dayjs.extend(relativeTime);
 
 export default function ManageMatches({ id }: { id: string }) {

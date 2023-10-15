@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { and, eq, sql } from "drizzle-orm";
 import { Users, Players, UserMatchTips, Scorer } from "@/db/schema";
 import { alias } from "drizzle-orm/pg-core";

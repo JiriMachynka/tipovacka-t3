@@ -7,11 +7,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { Formik } from "formik";
 import { Edit } from "lucide-react";
 import { useState } from "react";
-import { api } from "~/utils/api";
-import { type EditedScorer } from "@/types";
+import { api } from "@/utils/api";
+import { type EditedScorer } from "~/types";
 import Loading from "@/components/Loading";
 import type { GetStaticProps } from "next";
-import { generateSSGHelper } from "~/server/helpers/ssgHelper";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
 
 
 export default function MyTips({ id }: { id: string }) {

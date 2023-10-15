@@ -1,8 +1,8 @@
 import Loading from "@/components/Loading";
 import SingleTournamentLayout from "@/components/SingleTournamentLayout";
 import type { GetStaticProps } from "next";
-import { generateSSGHelper } from "~/server/helpers/ssgHelper";
-import { api } from "~/utils/api";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
+import { api } from "@/utils/api";
 
 export default function Leaderboard({ id }: { id: string }) {
   const { isLoading, data: leaderboard } = api.players.getLeaderboardData.useQuery({ tournamentId: parseInt(id) });

@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { type DeletedPlayer } from "@/types";
+import { type DeletedPlayer } from "~/types";
 import { useAuth } from "@clerk/nextjs";
 import { Formik } from "formik";
 import { Trash } from "lucide-react";
 import type { GetStaticProps } from "next";
 import { useState } from "react";
-import { generateSSGHelper } from "~/server/helpers/ssgHelper";
-import { api } from "~/utils/api";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
+import { api } from "@/utils/api";
 
 export default function ManagePlayers({ id }: { id: string }) {
 	const { toast } = useToast();

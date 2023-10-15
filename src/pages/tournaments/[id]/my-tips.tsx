@@ -1,5 +1,5 @@
 import type { GetStaticProps } from "next";
-import { generateSSGHelper } from "~/server/helpers/ssgHelper";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
 import SingleTournamentLayout from "@/components/SingleTournamentLayout";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { useToast } from "@/components/ui/use-toast";
 import { Formik } from "formik";
 import { Fragment, useState } from "react";
-import { api } from "~/utils/api";
+import { api } from "@/utils/api";
 import { Edit } from "lucide-react";
-import { type EditedMatch } from "@/types";
+import { type EditedMatch } from "~/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";

@@ -1,5 +1,5 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import { appRouter } from "~/server/api/root";
+import { appRouter } from "@/server/api/root";
 import { db } from "@/db/db";
 import superjson from "superjson";
 

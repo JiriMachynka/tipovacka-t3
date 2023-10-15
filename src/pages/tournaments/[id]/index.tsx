@@ -1,6 +1,6 @@
 import SingleTournamentLayout from "@/components/SingleTournamentLayout";
 import { type GetStaticProps } from "next";
-import { api } from "~/utils/api";
+import { api } from "@/utils/api";
 import { Download, Swords, Users } from "lucide-react";
 import Loading from "@/components/Loading";
 
@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocale from "dayjs/plugin/updateLocale";
 import "dayjs/locale/cs";
-import { generateSSGHelper } from "~/server/helpers/ssgHelper";
+import { generateSSGHelper } from "@/server/helpers/ssgHelper";
 dayjs.locale("cs");
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocale);

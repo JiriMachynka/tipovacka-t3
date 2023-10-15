@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Teams } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 
 export const teamsRouter = createTRPCRouter({
   getGroups: publicProcedure

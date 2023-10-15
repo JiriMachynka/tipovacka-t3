@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import { api } from "~/utils/api";
+import { api } from "@/utils/api";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Link from "next/link";
