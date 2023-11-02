@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { Formik } from "formik";
 import { useToast } from "@/components/ui/use-toast";
 import InfoTooltip from "@/components/ui/InfoTooltip";
+import { cn } from "@/lib/utils";
 
 const CreateTournamentPage = () => {
   const router = useRouter();
@@ -35,10 +36,8 @@ const CreateTournamentPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-primary">
-      <Link href="/" className="w-fit mx-auto my-3">
-        <Button>
-          Zpět na tipovačky
-        </Button>
+      <Link href="/" className={cn(buttonVariants({ size: "default" }), "w-fit mx-auto my-3")}>
+        Zpět na tipovačky
       </Link>
       <Formik
         initialValues={{

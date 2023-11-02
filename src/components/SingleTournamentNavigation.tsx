@@ -44,41 +44,42 @@ const SingleTournamentNavigation = () => {
               "hidden": !mobileNav,
               "block": mobileNav
             })}>
-              <Link href="/" legacyBehavior passHref >
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Zpět na tipovačky
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink href="/" className={navigationMenuTriggerStyle()}>
+              Zpět na tipovačky
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem className={cn("lg:block", {
               "hidden": !mobileNav,
               "block": mobileNav
             })}>
-              <Link href={`/tournaments/${router.query.id as string}/`} legacyBehavior passHref >
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Tabulka
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink
+                href={`/tournaments/${router.query.id as string}/`}
+                className={navigationMenuTriggerStyle()}
+              >
+                Tabulka
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem className={cn("lg:block", {
               "hidden": !mobileNav,
               "block": mobileNav
             })}>
-              <Link href={`/tournaments/${router.query.id as string}/my-tips`} legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Moje tipy
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink 
+                href={`/tournaments/${router.query.id as string}/my-tips`}
+                className={navigationMenuTriggerStyle()}
+              >
+                Moje tipy
+              </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem className={cn("lg:block", {
               "hidden": !mobileNav,
               "block": mobileNav
             })}>
-              <Link href={`/tournaments/${router.query.id as string}/leaderboard`} legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Žebříček
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuLink 
+                href={`/tournaments/${router.query.id as string}/leaderboard`}
+                className={navigationMenuTriggerStyle()}
+              >
+                Žebříček
+              </NavigationMenuLink>
             </NavigationMenuItem>
             {(tournament?.data[0]?.authorId === user.userId) && (<>
               <NavigationMenuItem className={cn("hidden lg:inline-flex")}>
@@ -95,31 +96,34 @@ const SingleTournamentNavigation = () => {
                 "hidden": !mobileNav,
                 "block": mobileNav
               })}>
-                <Link href={`/tournaments/${router.query.id as string}/manage-matches`} legacyBehavior passHref >
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Spravovat zápasy
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink 
+                  href={`/tournaments/${router.query.id as string}/manage-matches`}
+                  className={navigationMenuTriggerStyle()}
+                >
+                  Spravovat zápasy
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem className={cn("lg:hidden", {
                 "hidden": !mobileNav,
                 "block": mobileNav
               })}>
-                <Link href={`/tournaments/${router.query.id as string}/manage-scorers`} legacyBehavior passHref >
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Spravovat střelce
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink 
+                  href={`/tournaments/${router.query.id as string}/manage-scorers`}
+                  className={navigationMenuTriggerStyle()}
+                >
+                  Spravovat střelce
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem className={cn("lg:hidden", {
                 "hidden": !mobileNav,
                 "block": mobileNav
               })}>
-                <Link href={`/tournaments/${router.query.id as string}/manage-players`} legacyBehavior passHref >
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Spravovat hráče
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink 
+                  href={`/tournaments/${router.query.id as string}/manage-players`}
+                  className={navigationMenuTriggerStyle()}
+                >
+                  Spravovat hráče
+                </NavigationMenuLink>
               </NavigationMenuItem>
             </>)}
             <NavigationMenuItem className={cn("lg:block", {
