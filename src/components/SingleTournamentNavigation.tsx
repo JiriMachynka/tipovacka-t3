@@ -11,7 +11,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth, SignInButton, useClerk } from "@clerk/nextjs"
 import { LogOut, X } from "lucide-react";
-import Link from "next/link"
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { api } from "@/utils/api";
